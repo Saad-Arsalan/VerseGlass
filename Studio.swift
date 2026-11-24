@@ -178,6 +178,8 @@ struct Studio: View {
                     NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.Wallpaper-Settings.extension")!)
                 }
                 Toggle("Show lyrics",isOn:$prefs.enabled)
+                Toggle("Start screen saver on lock during playback", isOn:$prefs.startSaverOnLock)
+                if prefs.startSaverOnLock { Text(prefs.saverMessage).font(.caption).fixedSize(horizontal:false,vertical:true) }
                 Toggle("Lyric notification banners",isOn:$prefs.lockNotifications)
                 if prefs.lockNotifications {
                     Text(lockLyrics.permissionHint).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false, vertical:true)

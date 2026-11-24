@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3
+
+- Added an optional System Events request to start the selected screen saver when macOS locks during music playback. The Lock Screen panel reports Automation permission and request errors.
+
 ## v1.2
 
 First public source release.

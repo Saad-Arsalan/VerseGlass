@@ -20,6 +20,7 @@ import Combine
     private let rims = RimPanels()
     private var feed: SaverFeed?
     private var audioState: AnyCancellable?
+    private var saverLauncher: SaverLauncher?
     private var overlay: OverlayManager!
     private var statusItem: NSStatusItem!
     private var window: NSWindow!
@@ -57,6 +58,7 @@ import Combine
                 self?.loadArtwork((online || url?.isFileURL == true) ? url : nil)
             }
         openWindow()
+        saverLauncher = SaverLauncher(engine:engine,prefs:prefs)
         engine.start()
     }
     private func loadArtwork(_ url: URL?) {

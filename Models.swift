@@ -58,6 +58,9 @@ extension EnvironmentValues {
     @Published var matchArtwork = d.bool(forKey:"matchArtwork") { didSet { Self.d.set(matchArtwork, forKey:"matchArtwork") } }
     @Published var artworkAccent: Color?
     var effectiveAccent: Color { (matchArtwork ? artworkAccent : nil) ?? Color(hex:colorHex) }
+    @Published var startSaverOnLock = d.bool(forKey:"startSaverOnLock") { didSet { Self.d.set(startSaverOnLock, forKey:"startSaverOnLock") } }
+    @Published var saverAutomationReady = false
+    @Published var saverMessage = "Checking System Events access…"
     @Published var lockNotifications = d.bool(forKey:"lockNotifications") {
         didSet { Self.d.set(lockNotifications, forKey:"lockNotifications") }
     }
