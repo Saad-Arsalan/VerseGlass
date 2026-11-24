@@ -1,0 +1,11 @@
+name: Suggest a feature
+description: Describe a change that would improve VerseGlass.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: usecase
+    attributes:
+      label: What would you like to do?
+      description: Describe your use case and how you would know the change worked.
+    validations:
+      required: true

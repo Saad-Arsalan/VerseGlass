@@ -1,23 +1,28 @@
 # VerseGlass
 
-A local macOS menu-bar app for synced Spotify and Apple Music lyrics. Requires macOS 15 or later. To build on your Mac with the Xcode Command Line Tools, run `./build.sh` and open `build/Verseglass.app`.
+Word-synced lyrics for Spotify and Apple Music on Mac. Choose one of 13 styles, let the edges of your display pulse with the music, or take the lyrics full screen with the included screen saver.
 
-## Playing a song
+**[Download for Apple silicon (.dmg)](https://github.com/Saad-Arsalan/VerseGlass/releases/latest/download/VerseGlass-macOS-arm64.dmg)** · [All releases](https://github.com/Saad-Arsalan/VerseGlass/releases)
 
-Start a song in the Spotify or Music desktop app and allow Verseglass to read the player when macOS asks. Click the player's icon in the top right of the Verseglass window to see its connection, timing source, and lyric offset. The style browser plays its own preview. Select a style to use it for playback, or pin it to the menu bar.
+Requires macOS 15 or later.
 
-For the full-screen lyric scene, install the bundled `Contents/Resources/Verseglass.saver` in `~/Library/Screen Savers`, then choose **Wallpaper → Screen Saver → Custom → Verseglass** in System Settings. Keep the menu-bar app running so the screen saver receives the current song. From the unlocked desktop, choose **VerseGlass menu bar → Start Lyric Screen Saver** and allow System Events if prompted. Your macOS password-on-wake setting controls when authentication is required. The optional **Start screen saver on lock during playback** sends a request after locking, but macOS can continue showing the wallpaper even after accepting it. macOS controls when the saver appears and when it switches to the password screen. **Lock Screen → Lyric notification banners** is a separate optional display mode.
+![VerseGlass Fisheye Visual preview showing the words “the moon rise” with amber and rose lighting around the screen](docs/lyrics-preview.png)
 
-Under **Lighting**, choose **Music sync** and grant system-audio access when prompted. The display edges brighten with the audio level and bass onsets. Pick custom colors or follow the album cover. **Fisheye Visual** builds each lyric phrase from the sung words. **Show lyrics while unlocked** enables the click-through desktop overlay. Closing the window leaves Verseglass running in the menu bar.
+## Play your first song
 
-## Lyric sources and offline use
+1. Open the disk image, drag **Verseglass** to **Applications**, and launch it.
+2. Play a song in the Spotify or Music desktop app. Allow playback access when macOS asks.
+3. In VerseGlass, open **Lock Screen** and turn on **Show lyrics while unlocked** to see the words on your desktop.
 
-Online lookup checks [AMLL](https://github.com/amll-dev/amll-ttml-db) by recording ID for word timestamps, then [LRCLIB](https://lrclib.net/) by song metadata for line timestamps. Apple Music catalog matching uses Apple's iTunes Search service. For line-timed recordings, Verseglass estimates word position within each line. The player panel identifies the source and timing type.
+[Setup and troubleshooting](docs/usage.md) · [Report an issue](https://github.com/Saad-Arsalan/VerseGlass/issues/new/choose)
 
-Songs already fetched work offline. To use only local files, turn off **Look up lyrics online** in either player panel, play or pause the target song, then choose **Import LRC for this track**. Ordinary and enhanced LRC files are supported. Imported lyrics take precedence for that recording. Verseglass stores these files and fetched lyrics in `~/Library/Application Support/Verseglass/Lyrics`.
+## Build from source
 
-The 13 styles are independently implemented. macOS manages lock-screen notifications, including preview privacy, placement, and Focus filtering.
+With Xcode Command Line Tools installed, run these commands in a checkout of this repository.
 
-## Releases and license
+```sh
+./build.sh
+open build/Verseglass.app
+```
 
-See the [release history](CHANGELOG.md) for changes and [GitHub Releases](https://github.com/Saad-Arsalan/VerseGlass/releases) for downloads. VerseGlass source code is available under the [MIT License](LICENSE). Third-party lyrics and album artwork belong to their respective rights holders.
+[Changelog](CHANGELOG.md) · [Roadmap](https://github.com/users/Saad-Arsalan/projects/2) · [Discussions](https://github.com/Saad-Arsalan/VerseGlass/discussions) · [MIT license](LICENSE)

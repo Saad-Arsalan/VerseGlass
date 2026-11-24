@@ -1,0 +1,30 @@
+name: Report a bug
+description: Report a problem with playback, lyrics, lighting, or installation.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: VerseGlass and macOS versions
+      placeholder: "VerseGlass v1.5, macOS 15.6, Apple M3"
+    validations:
+      required: true
+  - type: dropdown
+    id: player
+    attributes:
+      label: Music player
+      options:
+        - Spotify
+        - Apple Music
+        - Both
+        - Unrelated to playback
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: What happened?
+      description: Include the steps, the result you expected, and what you saw. For screen saver issues, mention how you started it.
+    validations:
+      required: true

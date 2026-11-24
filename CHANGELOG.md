@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5
+
+- Download VerseGlass for Apple silicon as a disk image with a stable download link and a SHA-256 checksum.
+- Added automated macOS builds, release packaging, CodeQL scans, and Dependabot updates for GitHub Actions.
+- Shortened the README and added issue forms, contributor guidance, and a private security reporting channel.
+
 ## v1.4
 
 - Added **Start Lyric Screen Saver** to the menu bar so macOS can select the saver before entering the lock interface.

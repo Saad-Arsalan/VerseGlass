@@ -1,0 +1,41 @@
+name: macOS build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build app and screen saver
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build for Apple silicon
+        run: ./build.sh
+      - name: Verify both bundles
+        shell: bash
+        run: |
+          app=build/Verseglass.app
+          saver="$app/Contents/Resources/Verseglass.saver"
+          codesign --verify --deep --strict "$app"
+          codesign --verify --strict "$saver"
+          lipo "$app/Contents/MacOS/Verseglass" -verify_arch arm64
+          lipo "$saver/Contents/MacOS/VerseglassSaver" -verify_arch arm64
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            app_version=$(plutil -extract "$key" raw "$app/Contents/Info.plist")
+            saver_version=$(plutil -extract "$key" raw "$saver/Contents/Info.plist")
+            test "$app_version" = "$saver_version"
+          done

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a setup question
+    url: https://github.com/Saad-Arsalan/VerseGlass/discussions
+    about: Get help with the app or discuss an idea before filing an issue.
+  - name: Report a security vulnerability privately
+    url: https://github.com/Saad-Arsalan/VerseGlass/security/advisories/new
+    about: Send the maintainer a private report.
