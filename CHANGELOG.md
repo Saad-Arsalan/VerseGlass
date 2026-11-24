@@ -1,0 +1,17 @@
+# Changelog
+
+## v1.2
+
+First public source release.
+
+- Added the VerseGlass icon, screen saver, and a live feed from the menu-bar app.
+- Added music-reactive display-edge lighting with adjustable colors, thickness, and glow.
+- Updated kinetic lyric styles so phrases build word by word with changing size and emphasis.
+
+## v1.1
+
+Local release. Added optional silent lock-screen notifications that update with each lyric line and clear on unlock or pause.
+
+## v1.0
+
+Local release. Introduced Spotify and Apple Music playback tracking, 13 lyric styles, a click-through desktop overlay, menu-bar controls, online lyric lookup, local caching, and LRC import.
