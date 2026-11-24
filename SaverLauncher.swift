@@ -31,6 +31,11 @@ import OSLog
             }.store(in:&subscriptions)
         }
     }
+    func startFromDesktop(prefs:Preferences) {
+        guard !Self.isLocked else { return }
+        run(Self.launch, prefs:prefs)
+    }
+
     private static var isLocked: Bool {
         (CGSessionCopyCurrentDictionary() as? [String:Any])?["CGSSessionScreenIsLocked"] as? Bool ?? false
     }

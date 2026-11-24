@@ -1,10 +1,13 @@
 import AppKit
 import ScreenSaver
+import OSLog
 import SwiftUI
 
 @MainActor final class SaverModel: ObservableObject {
     @Published var packet: SaverPacket?
     var receiver: NSObjectProtocol?
+    private var reportedLyrics = false
+    private let log = Logger(subsystem:"local.verseglass.app",category:"saver-host")
     private var lastRequest = Date.distantPast
     func start() {
         guard receiver == nil else { return }
@@ -13,7 +16,14 @@ import SwiftUI
             guard let data = note.userInfo?["frame"] as? Data, data.count <= 16384,
                   let frame = try? PropertyListDecoder().decode(SaverPacket.self,from:data),
                   abs(frame.date.timeIntervalSinceNow) < 2 else { return }
-            MainActor.assumeIsolated { self?.packet = frame }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.packet = frame
+                if !self.reportedLyrics, frame.lines.indices.contains(frame.lineIndex) {
+                    self.reportedLyrics = true
+                    self.log.notice("Saver host decoded its first live lyric frame")
+                }
+            }
         }
         tick()
     }
@@ -26,6 +36,7 @@ import SwiftUI
     }
     func stop() {
         if let receiver { DistributedNotificationCenter.default().removeObserver(receiver) }
+        reportedLyrics=false
         receiver=nil
         packet=nil
         lastRequest = .distantPast

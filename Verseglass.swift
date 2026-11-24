@@ -113,6 +113,7 @@ import Combine
             if let state { i.state=state ? .on : .off }
         }
         item("Open Verseglass…",#selector(openWindow))
+        item("Start Lyric Screen Saver",#selector(startLyricSaver))
         menu.addItem(.separator())
         for s in Style.allCases where prefs.pins.contains(s.rawValue) {
             item(s.rawValue,#selector(chooseStyle(_:)),prefs.style==s,s.rawValue)
@@ -133,6 +134,7 @@ import Combine
         menu.addItem(.separator())
         menu.addItem(withTitle:"Quit Verseglass",action:#selector(NSApplication.terminate(_:)),keyEquivalent:"q")
     }
+    @objc private func startLyricSaver() { saverLauncher?.startFromDesktop(prefs:prefs) }
     @objc private func enable() { prefs.enabled.toggle() }
     @objc private func unlocked() { prefs.showUnlocked.toggle() }
     @objc private func awake() { prefs.keepAwake.toggle() }

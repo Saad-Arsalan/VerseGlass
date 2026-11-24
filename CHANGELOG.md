@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4
+
+- Added **Start Lyric Screen Saver** to the menu bar so macOS can select the saver before entering the lock interface.
+
 ## v1.3
 
 - Added an optional System Events request to start the selected screen saver when macOS locks during music playback. The Lock Screen panel reports Automation permission and request errors.
