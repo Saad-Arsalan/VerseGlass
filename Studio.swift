@@ -172,7 +172,7 @@ struct Studio: View {
     private var shortcutStatus: String {
         if !prefs.enabled { return "Turn on Show lyrics to use the shortcut." }
         if !engine.playing { return "Waiting for music." }
-        if prefs.shortcutAvailable { return "Ready. Press ⌃⌘Q to lock with the lyric saver." }
+        if prefs.shortcutAvailable { return "Ready. Hold Command and Control in either order, then tap Q." }
         return "Shortcut unavailable. Use Start Lyric Screen Saver from the menu."
     }
 

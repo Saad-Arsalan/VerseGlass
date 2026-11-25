@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.8
+
+- Avoided redundant saver launches during lock-screen startup. VerseGlass sends the first lyric frame as soon as the saver connects.
+- Clarified the lock shortcut in settings. Hold Command and Control in either order, then tap Q.
+
 ## v2.7
 
 - Removed the duplicate clock and date from the Mac lyric screen saver and its preview. The lock screen uses the macOS clock. The iPad listening view keeps its full-screen clock.

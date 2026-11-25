@@ -7,10 +7,7 @@ import Combine
     private var requestedUntil = Date.distantPast
     init(engine: Engine, prefs: Preferences) {
         let center = DistributedNotificationCenter.default()
-        listener = center.publisher(for: SaverPacket.request).receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.requestedUntil = Date().addingTimeInterval(3) }
-        timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().sink { [weak self] now in
-            guard let self, now < requestedUntil else { return }
+        func sendFrame(at now: Date) {
             let f = engine.frame
             let valid = prefs.enabled && engine.playing && f.lines.indices.contains(f.lineIndex)
             let first = valid ? max(0, f.lineIndex - 3) : 0
@@ -31,5 +28,23 @@ import Combine
             }
             center.postNotificationName(SaverPacket.response, object:nil, userInfo:["frame":data],options:[.deliverImmediately])
         }
+        listener = center.publisher(for: SaverPacket.request).receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                let now = Date()
+                let startsStream = now >= requestedUntil
+                requestedUntil = now.addingTimeInterval(3)
+                guard startsStream else { return }
+
+                sendFrame(at: now)
+                timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().sink { [weak self] tick in
+                    guard let self else { return }
+                    guard tick < requestedUntil else {
+                        timer = nil
+                        return
+                    }
+                    sendFrame(at: tick)
+                }
+            }
     }
 }
