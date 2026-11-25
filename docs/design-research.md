@@ -40,7 +40,7 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 
 **Design takeaway.** Try a placement selector for VerseGlass lighting before adding more colors. A listener who wants quieter visuals might prefer light only at the sides even with exactly the same palette. Preview that choice on the actual display, and keep the existing thickness and intensity settings.
 
-**Still to test with music playing.** The session briefly locked and was unlocked again, and Spotify was paused at the end of inspection. The settings inventory verifies the controls on offer. Seek continuity, source switching, the actual Control–Command–Q transition, sleep/wake, and external-display behavior still need direct observation.
+**Control–Command–Q trial.** Spotify reported active playback before a single lock shortcut. macOS confirmed the session locked. WindowServer continued listing Needle windows as on screen, including a display-sized window. Some of the same windows were listed before locking, so that observation alone cannot distinguish visible lyrics, artwork, and transparent content. Spotify was paused after the observation. Sleep/wake and external-display behavior remain open.
 
 ## First implementation
 
