@@ -8,6 +8,7 @@ struct LyricScene: View {
     let fontName: String
     let accent: Color
 
+    @Environment(\.self) private var environment
     @Environment(\.lyricPrimary) private var primary
     @Environment(\.lyricSecondary) private var secondary
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,7 +30,9 @@ struct LyricScene: View {
                         kineticWords
                     case .codestyle, .codestyleVisual:
                         codeScene
-                    case .branches, .web, .constellation:
+                    case .constellation:
+                        ConstellationScene(frame: frame, fontName: fontName, accent: accent)
+                    case .branches, .web:
                         graphScene
                     case .nativeDesign:
                         messages
@@ -143,12 +146,8 @@ struct LyricScene: View {
     private var highlightedInk: Color {
         // Keep a user-selected text colour if it reads against the highlight.
         func luminance(_ color: Color) -> Double {
-            guard let rgb = NSColor(color).usingColorSpace(.sRGB) else { return 0 }
-            func linear(_ c: CGFloat) -> Double {
-                let value = Double(c)
-                return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
-            }
-            return 0.2126 * linear(rgb.redComponent) + 0.7152 * linear(rgb.greenComponent) + 0.0722 * linear(rgb.blueComponent)
+            let rgb = color.resolve(in: environment)
+            return 0.2126 * Double(rgb.linearRed) + 0.7152 * Double(rgb.linearGreen) + 0.0722 * Double(rgb.linearBlue)
         }
         let fill = luminance(accent)
         let ink = luminance(primary)
@@ -210,19 +209,11 @@ struct LyricScene: View {
                 return CGPoint(x: 300 + 206 * cos(angle), y: 160 + 111 * sin(angle))
             }
             let x = 300 + (CGFloat(i) - CGFloat(indices.count - 1) / 2) * 105
-            let heights = isBranch ? [110, 193, 93, 184, 104] : [177, 102, 150, 88, 174]
+            let heights = [110, 193, 93, 184, 104]
             return CGPoint(x: x, y: CGFloat(heights[i]))
         }
         return ZStack {
             Canvas { context, canvas in
-                if style == .constellation {
-                    for seed in 0..<55 {
-                        let x = (seed * 113 + seed * seed * 7) % 548 + 26
-                        let y = (seed * 37 + seed * seed * 3) % 260 + 30
-                        let diameter: CGFloat = seed.isMultiple(of: 7) ? 2 : 1
-                        context.fill(Path(ellipseIn: CGRect(x: CGFloat(x), y: CGFloat(y), width: diameter, height: diameter)), with: .color(secondary.opacity(0.45)))
-                    }
-                }
                 let center = CGPoint(x: canvas.width / 2, y: canvas.height / 2)
                 if isWeb {
                     for ring in 1...4 {
@@ -251,9 +242,6 @@ struct LyricScene: View {
                     } else if isBranch {
                         path.move(to: CGPoint(x: point.x - 29, y: 159))
                         path.addQuadCurve(to: point, control: CGPoint(x: point.x, y: 155))
-                    } else if i > 0 {
-                        path.move(to: points[i - 1])
-                        path.addLine(to: point)
                     }
                     context.stroke(path, with: .color(lit ? accent : secondary.opacity(0.43)), lineWidth: lit ? 2 : 1)
                     let radius: CGFloat = indices[i] == active ? 5 : 3

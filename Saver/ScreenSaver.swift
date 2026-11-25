@@ -13,7 +13,7 @@ import SwiftUI
         guard receiver == nil else { return }
         let center = DistributedNotificationCenter.default()
         receiver = center.addObserver(forName:SaverPacket.response, object:nil, queue:.main) { [weak self] note in
-            guard let data = note.userInfo?["frame"] as? Data, data.count <= 16384,
+            guard let data = note.userInfo?["frame"] as? Data, data.count <= SaverPacket.maximumBytes,
                   let frame = try? PropertyListDecoder().decode(SaverPacket.self,from:data),
                   abs(frame.date.timeIntervalSinceNow) < 2 else { return }
             MainActor.assumeIsolated {
@@ -74,19 +74,34 @@ private struct SaverScene: View {
     let preview: Bool
     let display: String
     var body: some View {
-        ZStack {
-            Color.black
-            if let p=model.packet {
-                if includes(p.display), p.lines.indices.contains(p.lineIndex) {
-                    LyricScene(frame:LyricFrame(title:p.title,artist:p.artist,lines:p.lines,lineIndex:p.lineIndex,wordIndex:p.wordIndex,progress:p.progress),
-                               style:Style(rawValue:p.style) ?? .visual, size:p.size,fontName:p.font,accent:Color(hex:p.accent))
-                        .environment(\.lyricPrimary,Color(hex:p.primary)).environment(\.lyricSecondary,Color(hex:p.secondary))
-                        .padding(.horizontal,32)
-                }
-                if p.rim.enabled && includes(p.rim.display) { SaverGlow(rim:p.rim) }
-            } else if preview {
-                TimelineView(.periodic(from:.now,by:0.12)) { t in
-                    LyricScene(frame:.demo(at:t.date.timeIntervalSinceReferenceDate),style:.visual,size:42,fontName:"SF Pro",accent:Color(hex:"D88089"))
+        GeometryReader { geometry in
+            ZStack {
+                Color.black
+                if let p = model.packet {
+                    let style = Style(rawValue: p.style) ?? .visual
+                    let hasLine = p.lines.indices.contains(p.lineIndex)
+                    if includes(p.display), p.showsConstellationBackdrop ?? (style == .constellation && hasLine) {
+                        ConstellationBackdrop(artwork: p.artwork)
+                    }
+                    if includes(p.display), hasLine {
+                        let frame = LyricFrame(title: p.title, artist: p.artist, lines: p.lines, lineIndex: p.lineIndex,
+                                               wordIndex: p.wordIndex, progress: p.progress, firstLineNumber: p.firstLineNumber ?? 0)
+                        LyricScene(frame: frame, style: style, size: p.size, fontName: p.font, accent: Color(hex: p.accent))
+                            .environment(\.lyricPrimary, Color(hex: p.primary))
+                            .environment(\.lyricSecondary, Color(hex: p.secondary))
+                            .padding(.horizontal, style == .constellation ? geometry.size.width * 0.03 : 32)
+                            .padding(.top, style == .constellation ? geometry.size.height * 0.17 : 0)
+                            .padding(.bottom, style == .constellation ? geometry.size.height * 0.05 : 0)
+                    }
+                    if p.rim.enabled && includes(p.rim.display) { SaverGlow(rim:p.rim) }
+                } else if preview {
+                    ConstellationBackdrop()
+                    TimelineView(.periodic(from: .now, by: 0.12)) { tick in
+                        LyricScene(frame: .demo(at: tick.date.timeIntervalSinceReferenceDate), style: .constellation,
+                                   size: 40, fontName: "SF Pro", accent: Color(hex: "F5E5C2"))
+                            .padding(.top, geometry.size.height * 0.17)
+                            .padding(.bottom, geometry.size.height * 0.05)
+                    }
                 }
             }
         }.preferredColorScheme(.dark)

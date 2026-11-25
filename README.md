@@ -6,7 +6,7 @@ Word-synced lyrics for Spotify and Apple Music on Mac. Choose one of 13 styles, 
 
 Requires macOS 15 or later.
 
-![VerseGlass Fisheye Visual preview showing the words “the moon rise” with amber and rose lighting around the screen](docs/lyrics-preview.png)
+![Constellation screen saver tracing the words of Blue Hour across a plum ink wash, with the sung word in large type](docs/constellation.jpg)
 
 ## Play your first song
 

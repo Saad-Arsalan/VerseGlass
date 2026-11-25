@@ -27,8 +27,12 @@ jobs:
         run: ./build.sh
       - name: Test lyric lookup across album editions
         run: |
-          swiftc -swift-version 5 Models.swift LyricTiming.swift LyricsStore.swift Tests/LyricsLookup.swift -o "$RUNNER_TEMP/lyrics-lookup"
+          swiftc -swift-version 5 LyricModels.swift LyricTiming.swift LyricsStore.swift Tests/LyricsLookup.swift -o "$RUNNER_TEMP/lyrics-lookup"
           "$RUNNER_TEMP/lyrics-lookup"
+      - name: Test constellation timing and saver continuity
+        run: |
+          swiftc -swift-version 5 LyricModels.swift ConstellationScene.swift Tests/Constellation.swift -o "$RUNNER_TEMP/constellation"
+          "$RUNNER_TEMP/constellation"
       - name: Verify both bundles
         shell: bash
         run: |

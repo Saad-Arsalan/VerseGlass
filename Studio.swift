@@ -5,6 +5,17 @@ private struct Backdrop: View {
     let style: Style
     private var hue: Double { [0.57,0.86,0.43,0.94,0.59,0.44,0.22,0.81,0.66,0.60,0.40,0.53,0.72][style.index] }
     var body: some View {
+        if style == .constellation {
+            ConstellationBackdrop(showsClock: false)
+                .overlay(alignment: .bottom) {
+                    LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
+                }
+                .accessibilityHidden(true)
+        } else {
+            coloredBackdrop
+        }
+    }
+    private var coloredBackdrop: some View {
         GeometryReader { g in
             ZStack {
                 Color(hue:hue,saturation:0.68,brightness:0.16)

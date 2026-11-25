@@ -8,10 +8,13 @@ swiftc Brand.swift Tools/Icon.swift -o build/IconTool
 build/IconTool build/Verseglass.iconset
 iconutil -c icns build/Verseglass.iconset -o "$out/Contents/Resources/Verseglass.icns"
 saver="$out/Contents/Resources/Verseglass.saver"
-mkdir -p "$saver/Contents/MacOS"
+mkdir -p "$saver/Contents/MacOS" "$saver/Contents/Resources"
+for resources in "$out/Contents/Resources" "$saver/Contents/Resources"; do
+    cp Resources/ConstellationInk.jpg "$resources/"
+done
 cp Saver/Info.plist "$saver/Contents/Info.plist"
 swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos15.0" -module-name VerseglassSaver -parse-as-library -Xlinker -bundle -framework ScreenSaver \
-    Models.swift Styles.swift SaverWire.swift RimSurface.swift Saver/ScreenSaver.swift -o "$saver/Contents/MacOS/VerseglassSaver"
+    LyricModels.swift Models.swift Styles.swift ConstellationScene.swift ConstellationBackdrop.swift SaverWire.swift RimSurface.swift Saver/ScreenSaver.swift -o "$saver/Contents/MacOS/VerseglassSaver"
 codesign --force --sign - "$saver"
 swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos15.0" ./*.swift -o "$out/Contents/MacOS/Verseglass"
 codesign --force --sign - --identifier local.verseglass.app "$out"

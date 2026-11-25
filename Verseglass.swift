@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import CoreImage
+import ImageIO
 import Combine
 
 @main
@@ -64,6 +65,7 @@ import Combine
     private func loadArtwork(_ url: URL?) {
         artworkTask?.cancel()
         prefs.artworkAccent=nil
+        prefs.artworkThumbnail=nil
         RoomLighting.shared.clearPalette()
         guard let url else { return }
         artworkTask=Task {
@@ -73,6 +75,15 @@ import Combine
                 else { data = try await URLSession.shared.data(from:url).0 }
                 try Task.checkCancellation()
                 guard let art=CIImage(data:data) else { return }
+                if let source = CGImageSourceCreateWithData(data as CFData, nil),
+                   let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                       kCGImageSourceCreateThumbnailFromImageAlways: true,
+                       kCGImageSourceCreateThumbnailWithTransform: true,
+                       kCGImageSourceThumbnailMaxPixelSize: 96
+                   ] as CFDictionary) {
+                    prefs.artworkThumbnail = NSBitmapImageRep(cgImage: image)
+                        .representation(using: .jpeg, properties: [.compressionFactor: 0.65])
+                }
                 let mean=art.applyingFilter("CIAreaAverage",parameters:[kCIInputExtentKey:CIVector(cgRect:art.extent)]).cropped(to:CGRect(x:0,y:0,width:1,height:1))
                 var pixel=[UInt8](repeating:0,count:4)
                 CIContext().render(mean,toBitmap:&pixel,rowBytes:4,bounds:mean.extent,format:.RGBA8,colorSpace:CGColorSpace(name:CGColorSpace.sRGB))

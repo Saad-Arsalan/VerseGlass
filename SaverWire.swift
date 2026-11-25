@@ -3,6 +3,7 @@ import Foundation
 // A selected screen saver asks the menu-bar app for the current frame.
 // Only the recent lines needed for drawing are sent, and only in this session.
 struct SaverPacket: Codable {
+    static let maximumBytes = 16_384
     static let request = Notification.Name("local.verseglass.saver.request")
     static let response = Notification.Name("local.verseglass.saver.frame")
     let date: Date
@@ -20,6 +21,9 @@ struct SaverPacket: Codable {
     let secondary: String
     let display: String
     let rim: SaverRim
+    var firstLineNumber: Int?
+    var artwork: Data?
+    var showsConstellationBackdrop: Bool?
 }
 struct SaverRim: Codable {
     var enabled = false

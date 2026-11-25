@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7
+
+- Rebuilt Constellation around the star trail in [Needle’s reel](https://www.instagram.com/needlemacb/reel/DgJS6sPoyyG/). Each sung word adds a star, earlier words settle into small labels, and emphasized words appear in bold italic type.
+- Added an original ink-wash backdrop, a live serif clock, and album art when available in the Constellation screen saver. The desktop overlay keeps your own wallpaper visible.
+- Made Constellation the initial style for new installations. Existing style selections are preserved.
+
 ## v1.6
 
 - Fixed desktop lyrics staying hidden after a missed display-wake event. VerseGlass now checks the actual power state of each display when the session changes and during playback.
