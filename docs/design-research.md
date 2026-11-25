@@ -29,7 +29,7 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 | Island | Size and scale are separate. There are two finishes, two cover treatments, two island shapes, and optional weather, timer, and notes pages reached by swiping. Browser video detection has its own setup instructions. |
 | Lock Screen | A clock preview sits above settings for the player card. Three glass finishes are available. The on-screen tips describe successive cover clicks for artwork and lyrics. |
 | Desktop | The style chooser offers a turntable, sleeve, aura, lyrics, or live wallpaper. The panel teaches the entry gesture by telling the listener to drag the cover out of the open island. |
-| Lyrics | Five lyric styles and five background choices are independent. Scatter changes distance from center, while Tilt changes angle. Additional controls cover artwork inside letters, where lyrics appear, and keeping the display awake. |
+| Lyrics | Five lyric styles and five background choices are independent. Switching the background from black to white updated its description immediately; switching it back restored the original setting. Scatter changes distance from center, while Tilt changes angle. Additional controls cover artwork inside letters, where lyrics appear, and keeping the display awake. |
 | Sound | Five EQ bands cover sub-bass through treble. The interface offers five presets and explains how to reset an individual band. |
 | Beat Glow | Four placements illuminate the rim, all edges, corners, or sides. Thickness and brightness are separate, as are motion (steady or beat-driven) and color source (album or custom). |
 | Keys | Keyboard sounds and the animated typing companion appear as separate options. |
