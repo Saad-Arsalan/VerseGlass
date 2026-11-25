@@ -34,6 +34,7 @@ final class OverlayManager {
     private var subscriptions = Set<AnyCancellable>()
     private var locked = false
     private var screensAsleep = false
+    private var listeningDisplay: String?
     private var assertion: IOPMAssertionID?
 
     init(engine: Engine, prefs: Preferences, lockLyrics: LockLyrics) {
@@ -92,6 +93,12 @@ final class OverlayManager {
         resync()
     }
 
+    func setListeningDisplay(_ id: String?) {
+        guard id != listeningDisplay else { return }
+        listeningDisplay = id
+        refresh()
+    }
+
     func stop() {
         subscriptions.removeAll()
         lockLyrics.stop()
@@ -134,7 +141,7 @@ final class OverlayManager {
         if shouldShow {
             for screen in NSScreen.screens {
                 guard let id = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value,
-                      CGDisplayIsAsleep(id) == 0,
+                      screen.verseID != listeningDisplay, CGDisplayIsAsleep(id) == 0,
                       prefs.displayID == "all" || selected.contains(id)
                         || (prefs.displayID == "main" && id == CGMainDisplayID()) else { continue }
                 required.insert(id)

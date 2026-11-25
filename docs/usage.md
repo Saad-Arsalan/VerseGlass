@@ -12,6 +12,10 @@ Open VerseGlass from the menu bar. Click a style to preview it, then click **Sel
 
 Click the Spotify or Apple Music icon at the top of the window to check which track VerseGlass sees, the source of its timing data, and any permission errors. Use **Timing shift** to adjust the lyrics for the current song.
 
+## Listening View
+
+Choose **Open Listening View** from the VerseGlass menu bar to see the current recording in its own window. Switch between **Lyrics** and **Album Cover** while Spotify or Music continues playing. Use the green window button to enter full screen.
+
 ## Lyric screen saver
 
 1. Open `Verseglass.saver` in the downloaded disk image and install it for your user account. If you built from source, the same file lives in `build/Verseglass.app/Contents/Resources/`.

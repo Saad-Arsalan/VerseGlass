@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1
+
+- Added **Open Listening View** on Mac. Switch between album artwork and timed lyrics in a dedicated window while your music keeps playing.
+- Started a [design notebook](docs/design-research.md) for Lumn, Verci, Needle, and Wevy, with observations from Needle’s demos and questions to check in the trial.
+
 ## v2
 
 - Added a native iPad app with the Constellation scene, all 13 lyric styles, full-screen playback, and a built-in silent demo.

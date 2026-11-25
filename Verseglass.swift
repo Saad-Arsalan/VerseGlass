@@ -25,6 +25,7 @@ import Combine
     private var overlay: OverlayManager!
     private var statusItem: NSStatusItem!
     private var window: NSWindow!
+    private var listeningWindow: NSWindow?
     private var artworkSubscription: AnyCancellable?
     private var artworkTask: Task<Void,Never>?
     func applicationDidFinishLaunching(_ notification:Notification) {
@@ -64,6 +65,7 @@ import Combine
     }
     private func loadArtwork(_ url: URL?) {
         artworkTask?.cancel()
+        prefs.listeningCover=nil
         prefs.artworkAccent=nil
         prefs.artworkThumbnail=nil
         RoomLighting.shared.clearPalette()
@@ -75,14 +77,21 @@ import Combine
                 else { data = try await URLSession.shared.data(from:url).0 }
                 try Task.checkCancellation()
                 guard let art=CIImage(data:data) else { return }
-                if let source = CGImageSourceCreateWithData(data as CFData, nil),
-                   let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
-                       kCGImageSourceCreateThumbnailFromImageAlways: true,
-                       kCGImageSourceCreateThumbnailWithTransform: true,
-                       kCGImageSourceThumbnailMaxPixelSize: 96
-                   ] as CFDictionary) {
-                    prefs.artworkThumbnail = NSBitmapImageRep(cgImage: image)
-                        .representation(using: .jpeg, properties: [.compressionFactor: 0.65])
+                if let source = CGImageSourceCreateWithData(data as CFData, nil) {
+                    func thumbnail(maxPixels: Int) -> CGImage? {
+                        CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                            kCGImageSourceCreateThumbnailFromImageAlways: true,
+                            kCGImageSourceCreateThumbnailWithTransform: true,
+                            kCGImageSourceThumbnailMaxPixelSize: maxPixels
+                        ] as CFDictionary)
+                    }
+                    if let cover = thumbnail(maxPixels: 1024) {
+                        prefs.listeningCover = NSImage(cgImage: cover, size: .zero)
+                    }
+                    if let small = thumbnail(maxPixels: 96) {
+                        prefs.artworkThumbnail = NSBitmapImageRep(cgImage: small)
+                            .representation(using: .jpeg, properties: [.compressionFactor: 0.65])
+                    }
                 }
                 let mean=art.applyingFilter("CIAreaAverage",parameters:[kCIInputExtentKey:CIVector(cgRect:art.extent)]).cropped(to:CGRect(x:0,y:0,width:1,height:1))
                 var pixel=[UInt8](repeating:0,count:4)
@@ -114,7 +123,53 @@ import Combine
         NSApp.activate(ignoringOtherApps:true)
     }
     func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool) -> Bool { openWindow(); return true }
-    func windowWillClose(_ notification:Notification) { NSApp.setActivationPolicy(.accessory) }
+    @objc private func openListeningView() {
+        let listening: NSWindow
+        if let existing = listeningWindow {
+            listening = existing
+        } else {
+            listening = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 540),
+                                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                                 backing: .buffered, defer: false)
+            listening.title = "Listening View"
+            listening.appearance = NSAppearance(named: .darkAqua)
+            listening.collectionBehavior = [.fullScreenPrimary]
+            listening.contentMinSize = NSSize(width: 430, height: 290)
+            listening.isReleasedWhenClosed = false
+            listening.contentView = NSHostingView(rootView: ListeningView(engine: engine, prefs: prefs) { [weak listening] in
+                listening?.performClose(nil)
+            })
+            listening.delegate = self
+            listening.center()
+            listening.setFrameAutosaveName("VerseGlassListening")
+            listeningWindow = listening
+        }
+        NSApp.setActivationPolicy(.regular)
+        if listening.isMiniaturized { listening.deminiaturize(nil) }
+        listening.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        updateListeningDisplay()
+    }
+
+    private func updateListeningDisplay() {
+        let listening = listeningWindow
+        let visible = listening?.occlusionState.contains(.visible) == true && listening?.isMiniaturized == false
+        overlay.setListeningDisplay(visible ? listening?.screen?.verseID : nil)
+    }
+
+    func windowDidChangeScreen(_ notification: Notification) { updateListeningDisplay() }
+    func windowDidChangeOcclusionState(_ notification: Notification) { updateListeningDisplay() }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let closed = notification.object as? NSWindow else { return }
+        if closed === listeningWindow {
+            listeningWindow = nil
+            overlay.setListeningDisplay(nil)
+        }
+        if ![window, listeningWindow].contains(where: { $0 !== closed && ($0?.isVisible == true || $0?.isMiniaturized == true) }) {
+            NSApp.setActivationPolicy(.accessory)
+        }
+    }
     func menuNeedsUpdate(_ menu:NSMenu) {
         menu.removeAllItems()
         func item(_ title:String,_ action:Selector,_ state:Bool?=nil,_ value:Any?=nil,in dest:NSMenu?=nil) {
@@ -124,6 +179,7 @@ import Combine
             if let state { i.state=state ? .on : .off }
         }
         item("Open Verseglass…",#selector(openWindow))
+        item("Open Listening View", #selector(openListeningView))
         item("Start Lyric Screen Saver",#selector(startLyricSaver))
         menu.addItem(.separator())
         for s in Style.allCases where prefs.pins.contains(s.rawValue) {

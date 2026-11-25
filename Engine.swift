@@ -24,6 +24,7 @@ final class Engine: ObservableObject {
     private let store = LyricsStore()
     private var current = PlayerReading()
     private var lyrics: TimedLyrics?
+    var hasTimedLyrics: Bool { lyrics != nil }
     private var monitor: Task<Void, Never>?
     private var clock: Task<Void, Never>?
     private var fetch: Task<Void, Never>?

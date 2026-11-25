@@ -27,4 +27,4 @@ For Mac, install Xcode Command Line Tools and run these commands in a checkout o
 open build/Verseglass.app
 ```
 
-[Changelog](CHANGELOG.md) · [Roadmap](https://github.com/users/Saad-Arsalan/projects/2) · [Discussions](https://github.com/Saad-Arsalan/VerseGlass/discussions) · [MIT license](LICENSE)
+[Changelog](CHANGELOG.md) · [Design notebook](docs/design-research.md) · [Roadmap](https://github.com/users/Saad-Arsalan/projects/2) · [Discussions](https://github.com/Saad-Arsalan/VerseGlass/discussions) · [MIT license](LICENSE)

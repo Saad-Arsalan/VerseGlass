@@ -18,6 +18,7 @@ extension Color {
     @Published var secondaryHex = d.string(forKey:"secondary") ?? "A6B2C5" { didSet { Self.d.set(secondaryHex, forKey:"secondary") } }
     @Published var matchArtwork = d.bool(forKey:"matchArtwork") { didSet { Self.d.set(matchArtwork, forKey:"matchArtwork") } }
     @Published var artworkAccent: Color?
+    @Published var listeningCover: NSImage?
     var artworkThumbnail: Data?
     var effectiveAccent: Color { (matchArtwork ? artworkAccent : nil) ?? Color(hex:colorHex) }
     @Published var startSaverOnLock = d.bool(forKey:"startSaverOnLock") { didSet { Self.d.set(startSaverOnLock, forKey:"startSaverOnLock") } }
