@@ -4,6 +4,7 @@
 
 - Added an opt-in Control–Command–Q shortcut that starts the lyric saver during playback. It registers only that chord and works with Device Control and Accessibility off.
 - Added a native lock fallback if the saver fails to lock the Mac promptly. Pausing playback or quitting VerseGlass releases the shortcut.
+- Verified on macOS 27.0.1 with a single Control–Command–Q during playback. macOS reported a locked session, loaded the Verseglass saver, and the listener saw the words moving.
 
 ## v2.3
 
