@@ -40,44 +40,45 @@ import OSLog
             .sink { [weak self] _ in
                 guard let self, !handlingLock, prefs.startSaverOnLock, prefs.enabled, engine.playing else { return }
                 handlingLock = true
-                startTask = Task { [self] in
+                startTask = Task {
                     try? await Task.sleep(for: .milliseconds(400))
-                    guard shouldStart(engine, prefs) else { return }
+                    guard self.shouldStart(engine, prefs) else { return }
                     // Query the current grant. A launch during a locked session may
                     // never have run the unlocked permission check.
                     let status = await Self.checkLaunchPermission()
-                    guard shouldStart(engine, prefs) else { return }
+                    guard self.shouldStart(engine, prefs) else { return }
                     guard status == noErr else {
                         prefs.saverAutomationReady = false
-                        log.notice("System Events permission check returned \(status); waiting for system saver fallback")
+                        self.log.notice("System Events permission check returned \(status); waiting for system saver fallback")
                         return
                     }
                     prefs.saverAutomationReady = true
                     do {
                         try await Self.requestSelectedSaver()
-                        guard shouldStart(engine, prefs) else { return }
+                        guard self.shouldStart(engine, prefs) else { return }
                         prefs.saverMessage = "Start request sent to macOS."
-                        log.notice("Requested selected screen saver during lock")
+                        self.log.notice("Requested selected screen saver during lock")
                     } catch {
-                        guard shouldStart(engine, prefs) else { return }
-                        log.error("System Events start failed: \(error.localizedDescription, privacy: .public)")
+                        guard self.shouldStart(engine, prefs) else { return }
+                        self.log.error("System Events start failed: \(error.localizedDescription, privacy: .public)")
                     }
                 }
-                fallbackTask = Task { [self] in
+                fallbackTask = Task {
                     try? await Task.sleep(for: .seconds(3))
-                    guard shouldStart(engine, prefs) else { return }
+                    guard self.shouldStart(engine, prefs) else { return }
+                    self.startTask?.cancel()
                     let configuration = NSWorkspace.OpenConfiguration()
                     configuration.activates = false
                     let url = URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app")
                     do {
                         _ = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
-                        guard shouldStart(engine, prefs) else { return }
+                        guard self.shouldStart(engine, prefs) else { return }
                         prefs.saverMessage = "Asked macOS to open the screen saver."
-                        log.notice("Opened system ScreenSaverEngine after no VerseGlass host heartbeat")
+                        self.log.notice("Opened system ScreenSaverEngine after no VerseGlass host heartbeat")
                     } catch {
-                        guard shouldStart(engine, prefs) else { return }
+                        guard self.shouldStart(engine, prefs) else { return }
                         prefs.saverMessage = error.localizedDescription
-                        log.error("Opening system ScreenSaverEngine failed: \(error.localizedDescription, privacy: .public)")
+                        self.log.error("Opening system ScreenSaverEngine failed: \(error.localizedDescription, privacy: .public)")
                     }
                 }
             }.store(in: &subscriptions)
