@@ -11,7 +11,7 @@
 
 ## Needle on Mac
 
-The official Mac disk image contained version 1.3.1. Its signature verified and Gatekeeper accepted its notarization. The app launched on November 25, 2026. The first pass used published demos. A subsequent walkthrough opened all 12 sidebar sections in the installed trial. General showed two days remaining. Needle says its trial starts on first launch and lasts two days. [Download and onboarding](https://needlemac.com/download.html) · [Trial terms](https://needlemac.com/terms.html)
+The official Mac disk image contained version 1.3.1. Its signature verified and Gatekeeper accepted its notarization. The app launched on November 25, 2026. The first pass used published demos. A subsequent walkthrough opened all 12 sidebar sections in the installed trial. The settings tour offered 14 steps and a skip action. An animated lyric sample was visible behind the tour, even with Spotify paused. General showed two days remaining. Needle says its trial starts on first launch and lasts two days. [Download and onboarding](https://needlemac.com/download.html) · [Trial terms](https://needlemac.com/terms.html)
 
 | Surface | What the published demos show | Question for hands-on testing |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 
 **Design takeaway.** Try a placement selector for VerseGlass lighting before adding more colors. A listener who wants quieter visuals might prefer light only at the sides even with exactly the same palette. Preview that choice on the actual display, and keep the existing thickness and intensity settings.
 
-**Still to test with music playing.** The Mac locked again during the walkthrough. The settings inventory verifies the controls on offer. Seek continuity, source switching, the actual Control–Command–Q transition, sleep/wake, and external-display behavior still need direct observation.
+**Still to test with music playing.** The session briefly locked and was unlocked again, and Spotify was paused at the end of inspection. The settings inventory verifies the controls on offer. Seek continuity, source switching, the actual Control–Command–Q transition, sleep/wake, and external-display behavior still need direct observation.
 
 ## First implementation
 
