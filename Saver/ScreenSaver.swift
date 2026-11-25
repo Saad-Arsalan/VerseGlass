@@ -87,7 +87,7 @@ private struct SaverScene: View {
                     let style = Style(rawValue: p.style) ?? .visual
                     let hasLine = p.lines.indices.contains(p.lineIndex)
                     if includes(p.display), p.showsConstellationBackdrop ?? (style == .constellation && hasLine) {
-                        ConstellationBackdrop(artwork: p.artwork)
+                        ConstellationBackdrop(artwork: p.artwork, showsClock: false)
                     }
                     if includes(p.display), hasLine {
                         let frame = LyricFrame(title: p.title, artist: p.artist, lines: p.lines, lineIndex: p.lineIndex,
@@ -101,7 +101,7 @@ private struct SaverScene: View {
                     }
                     if p.rim.enabled && includes(p.rim.display) { SaverGlow(rim:p.rim) }
                 } else if preview {
-                    ConstellationBackdrop()
+                    ConstellationBackdrop(showsClock: false)
                     TimelineView(.periodic(from: .now, by: 0.12)) { tick in
                         LyricScene(frame: .demo(at: tick.date.timeIntervalSinceReferenceDate), style: .constellation,
                                    size: 40, fontName: "SF Pro", accent: Color(hex: "F5E5C2"))

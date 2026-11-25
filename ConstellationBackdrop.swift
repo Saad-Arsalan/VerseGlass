@@ -14,7 +14,7 @@ private final class ConstellationResources: NSObject {
 
 struct ConstellationBackdrop: View {
     var artwork: Data? = nil
-    var showsClock = true
+    let showsClock: Bool
     @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {

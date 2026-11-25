@@ -8,7 +8,7 @@ The release disk image contains the app, an Applications shortcut, and the optio
 
 Open VerseGlass from the menu bar. Click a style to preview it, then click **Select** to apply it to playback. Pin favorites for quick access from the menu bar. Closing the window keeps the lyrics running.
 
-**Constellation** draws a path as each word is sung. Play it over your desktop or use **Start Lyric Screen Saver** for the ink backdrop, clock, and album cover. Edge lighting follows the settings under **Lighting**.
+**Constellation** draws a path as each word is sung. Play it over your desktop or use **Start Lyric Screen Saver** for the ink backdrop and album cover. On the Mac lock screen, macOS controls the clock and date. Edge lighting follows the settings under **Lighting**.
 
 Click the Spotify or Apple Music icon at the top of the window to check which track VerseGlass sees, the source of its timing data, and any permission errors. Use **Timing shift** to adjust the lyrics for the current song.
 

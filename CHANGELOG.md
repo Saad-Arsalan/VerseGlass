@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.7
+
+- Removed the duplicate clock and date from the Mac lyric screen saver and its preview. The lock screen uses the macOS clock. The iPad listening view keeps its full-screen clock.
+
 ## v2.6
 
 - Lyric lettering is now laid out at its displayed size across all 13 styles on Mac and iPad, including the Mac screen saver.
