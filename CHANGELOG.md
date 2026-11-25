@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5
+
+- Fixed an intermittent wallpaper-only lock when pressing Command–Control–Q or Control–Command–Q. VerseGlass gives the selected saver time to finish locking before requesting a standard lock. An explicit rejection still triggers the fallback immediately.
+- When System Events has exited, VerseGlass can relaunch it in the background and retry starting the saver within the same keypress.
+
 ## v2.4
 
 - Added an opt-in Control–Command–Q shortcut that starts the lyric saver during playback. It registers only that chord and works with Device Control and Accessibility off.

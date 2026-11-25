@@ -100,7 +100,7 @@ import OSLog
         guard !SaverLauncher.isLocked else { return noErr }
         locking = true
         let trySaver = wantsChord && chord != nil
-        let deadline = DispatchTime.now() + .milliseconds(320)
+        let deadline = Self.saverLockDeadline()
         log.notice("Received saver-first Control–Command–Q")
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             let result = Self.finishLock(trySaverFirst: trySaver, deadline: deadline)
@@ -123,16 +123,24 @@ import OSLog
 
     enum Outcome { case alreadyLocked, requestedLock, lockRequestFailed }
 
+    nonisolated static func saverLockDeadline() -> DispatchTime { .now() + .seconds(2) }
+
     // The fallback runs on its own worker even if System Events or the UI stops responding.
     nonisolated static func finishLock(trySaverFirst: Bool, deadline: DispatchTime) -> Outcome {
         if SaverLauncher.isLocked { return .alreadyLocked }
         if trySaverFirst {
+            let refused = DispatchSemaphore(value: 0)
             DispatchQueue.global(qos: .userInitiated).async {
-                _ = try? SaverLauncher.sendSelectedSaverRequest(whileLocked: false, before: deadline)
+                if (try? SaverLauncher.sendSelectedSaverRequest(whileLocked: false, before: deadline)) != true {
+                    refused.signal()
+                }
             }
+            // System Events can acknowledge the saver more than a second before the
+            // session reports locked. A direct lock during that transition hides the saver.
             while DispatchTime.now() < deadline {
                 if SaverLauncher.isLocked { return .alreadyLocked }
-                Thread.sleep(forTimeInterval: 0.008)
+                let nextCheck = min(deadline, .now() + .milliseconds(16))
+                if refused.wait(timeout: nextCheck) == .success { break }
             }
         }
         if SaverLauncher.isLocked { return .alreadyLocked }

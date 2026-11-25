@@ -24,9 +24,9 @@ Choose **Open Listening View** from the VerseGlass menu bar to see the current r
 
 ### Lock-screen shortcut
 
-Select **Verseglass** as your system screen saver. In VerseGlass → **Lock Screen**, enable **Show lyrics** and **Start lyrics first on ⌃⌘Q**. While a song plays, press **Control–Command–Q** once. The shortcut starts the selected saver. With macOS set to require a password immediately, the saver can lock the session while the words animate.
+Select **Verseglass** as your system screen saver. In VerseGlass → **Lock Screen**, enable **Show lyrics** and **Start lyrics first on ⌃⌘Q**. While a song plays, hold **Command** and **Control** in either order, then tap **Q** once. The shortcut starts the selected saver. With macOS set to require a password immediately, the saver can lock the session while the words animate.
 
-VerseGlass registers that one shortcut during playback. Device Control and Accessibility can stay off. System Events may ask for Automation access to start the saver. If the session is still unlocked after a brief wait, VerseGlass asks macOS to lock immediately. That fallback uses a private macOS lock function. VerseGlass only registers the shortcut on systems that provide it. Pausing playback, quitting VerseGlass or turning the option off releases the shortcut.
+VerseGlass registers that one shortcut during playback. Device Control and Accessibility can stay off. System Events may ask for Automation access to start the saver. If the saver request is rejected, VerseGlass asks macOS to lock immediately. If the request is pending or accepted, VerseGlass gives the session up to two seconds from the keypress to lock before calling the fallback. That fallback uses a private macOS lock function. VerseGlass only registers the shortcut on systems that provide it. Pausing playback, quitting VerseGlass or turning the option off releases the shortcut.
 
 **Start screen saver on lock during playback** also tries to start the saver after other lock events. On macOS 27.0.1, this path can leave the wallpaper and clock visible. **Start Lyric Screen Saver** in the menu starts the saver from the desktop. **Lyric notification banners** is a separate option for showing each line in a notification.
 

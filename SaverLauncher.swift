@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import OSLog
+import os.lock
 
 @MainActor final class SaverLauncher {
     private let log = Logger(subsystem: "local.verseglass.app", category: "screen-saver")
@@ -12,6 +13,7 @@ import OSLog
     private var command: Process?
     private static let query = "get running of screen saver preferences"
     private static let launch = "if not (running of screen saver preferences) then start screen saver preferences"
+    private nonisolated static let sessionVersion = OSAllocatedUnfairLock(initialState: UInt(0))
 
     init(engine: Engine, prefs: Preferences) {
         prefs.$startSaverOnLock.removeDuplicates().sink { [weak self] enabled in
@@ -36,12 +38,14 @@ import OSLog
             }.store(in: &subscriptions)
         center.publisher(for: .init("com.apple.screenIsUnlocked")).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                Self.sessionVersion.withLock { $0 &+= 1 }
                 guard let self else { return }
                 cancelLockRequests()
                 if prefs.startSaverOnLock || prefs.saverFirstShortcut { run(Self.query, prefs: prefs) }
             }.store(in: &subscriptions)
         center.publisher(for: .init("com.apple.screenIsLocked")).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                Self.sessionVersion.withLock { $0 &+= 1 }
                 guard let self, !handlingLock, prefs.startSaverOnLock, prefs.enabled, engine.playing else { return }
                 handlingLock = true
                 startTask = Task {
@@ -111,8 +115,9 @@ import OSLog
     // Public command codes from System Events' Screen Saver scripting suite.
     private nonisolated static let suite: UInt32 = 0x73637376 // scsv
     private nonisolated static let start: UInt32 = 0x73747274 // strt
+    private nonisolated static let systemEventsID = "com.apple.systemevents"
     private nonisolated static func checkLaunchPermission() async -> OSStatus {
-        let target = NSAppleEventDescriptor(bundleIdentifier: "com.apple.systemevents")
+        let target = NSAppleEventDescriptor(bundleIdentifier: systemEventsID)
         return AEDeterminePermissionToAutomateTarget(target.aeDesc, suite, start, false)
     }
 
@@ -120,9 +125,41 @@ import OSLog
         _ = try sendSelectedSaverRequest(whileLocked: true)
     }
 
-    // Called on a worker thread. Recheck session and deadline immediately before
-    // sending so a delayed shortcut request cannot launch a saver after unlock.
+    // Called on a worker thread. An Apple event alone does not start System Events.
     nonisolated static func sendSelectedSaverRequest(whileLocked: Bool, before deadline: DispatchTime = .distantFuture) throws -> Bool {
+        let generation = sessionVersion.withLock { $0 }
+        func isCurrent() -> Bool {
+            !Task.isCancelled && DispatchTime.now() < deadline && isLocked == whileLocked
+                && (whileLocked || sessionVersion.withLock { $0 == generation })
+        }
+        guard isCurrent() else { return false }
+        if whileLocked || NSRunningApplication.runningApplications(withBundleIdentifier: systemEventsID).contains(where: { !$0.isTerminated }) {
+            do { return try sendStartEvent(before: deadline, isCurrent: isCurrent) }
+            catch let error as NSError {
+                // A previously running System Events can exit between lookup and delivery.
+                guard !whileLocked, error.domain == NSOSStatusErrorDomain,
+                      error.code == Int(procNotFound) || error.code == Int(connectionInvalid) else { throw error }
+            }
+        }
+        guard isCurrent() else { return false }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        configuration.promptsUserIfNeeded = false
+        configuration.addsToRecentItems = false
+        let launchFinished = DispatchSemaphore(value: 0)
+        let launched = OSAllocatedUnfairLock(initialState: false)
+        let url = URL(fileURLWithPath: "/System/Library/CoreServices/System Events.app")
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { app, error in
+            launched.withLock { $0 = app != nil && error == nil }
+            launchFinished.signal()
+        }
+        // The callback only wakes this worker. A late callback cannot start a saver.
+        let launchDeadline = min(deadline, .now() + .seconds(5))
+        guard launchFinished.wait(timeout: launchDeadline) == .success, launched.withLock({ $0 }) else { return false }
+        return try sendStartEvent(before: deadline, isCurrent: isCurrent)
+    }
+
+    private nonisolated static func sendStartEvent(before deadline: DispatchTime, isCurrent: () -> Bool) throws -> Bool {
         let object = NSAppleEventDescriptor.record()
         object.setDescriptor(NSAppleEventDescriptor(typeCode: typeProperty), forKeyword: UInt32(keyAEDesiredClass))
         object.setDescriptor(NSAppleEventDescriptor(enumCode: UInt32(formPropertyID)), forKeyword: UInt32(keyAEKeyForm))
@@ -131,13 +168,16 @@ import OSLog
         guard let preferences = object.coerce(toDescriptorType: typeObjectSpecifier) else {
             throw CocoaError(.coderInvalidValue)
         }
-        let target = NSAppleEventDescriptor(bundleIdentifier: "com.apple.systemevents")
+        let target = NSAppleEventDescriptor(bundleIdentifier: systemEventsID)
         let event = NSAppleEventDescriptor(eventClass: suite, eventID: start, targetDescriptor: target,
                                            returnID: -1, transactionID: 0)
         event.setParam(preferences, forKeyword: keyDirectObject)
-        guard !Task.isCancelled, isLocked == whileLocked, DispatchTime.now() < deadline else { return false }
+        guard isCurrent() else { return false }
+        let now = DispatchTime.now()
+        guard now < deadline else { return false }
+        let timeout = min(5.0, Double(deadline.uptimeNanoseconds - now.uptimeNanoseconds) / 1_000_000_000)
         let quiet = NSAppleEventDescriptor.SendOptions(rawValue: UInt(kAEDoNotPromptForUserConsent))
-        let reply = try event.sendEvent(options: [.waitForReply, .neverInteract, quiet], timeout: 5)
+        let reply = try event.sendEvent(options: [.waitForReply, .neverInteract, quiet], timeout: timeout)
         if let error = reply.paramDescriptor(forKeyword: keyErrorNumber), error.int32Value != noErr {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(error.int32Value))
         }
