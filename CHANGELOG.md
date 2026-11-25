@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.6
+
+- Lyric lettering is now laid out at its displayed size across all 13 styles on Mac and iPad, including the Mac screen saver.
+- In Constellation, earlier words are larger and brighter, and labels move around nearby stars and words to stay legible. The sung word keeps its halo and the route follows the same lyric timing.
+
 ## v2.5
 
 - Fixed an intermittent wallpaper-only lock when pressing Command–Control–Q or Control–Command–Q. VerseGlass gives the selected saver time to finish locking before requesting a standard lock. An explicit rejection still triggers the fallback immediately.

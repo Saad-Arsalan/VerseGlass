@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Two lyric lines share a sheet of stars. Its layout depends on the song and
 /// lyric position so that seeking, or joining playback in the saver, is exact.
-struct ConstellationPhrase {
+struct ConstellationPhrase: Equatable {
     static let capacity = 12
     let words: [String]
     let firstLine: Int
@@ -48,57 +48,82 @@ struct ConstellationPhrase {
 }
 
 struct ConstellationScene: View {
-    let frame: LyricFrame
+    private let phrase: ConstellationPhrase?
     let fontName: String
     let accent: Color
+    let layoutScale: CGFloat
+    @Environment(\.pixelLength) private var pixel
     @Environment(\.self) private var environment
     @Environment(\.lyricPrimary) private var primary
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    init(frame: LyricFrame, fontName: String, accent: Color, layoutScale: CGFloat) {
+        phrase = ConstellationPhrase(frame: frame)
+        self.fontName = fontName
+        self.accent = accent
+        self.layoutScale = layoutScale
+    }
+
     var body: some View {
-        if let phrase = ConstellationPhrase(frame: frame) {
+        if layoutScale > 0, let phrase {
             field(phrase).id(phrase.seed)
         }
     }
 
     private func field(_ phrase: ConstellationPhrase) -> some View {
         let last = phrase.words.count - 1
+        let points = phrase.words.indices.map { index in
+            let point = phrase.point(at: index)
+            return CGPoint(x: point.x * layoutScale, y: point.y * layoutScale)
+        }
         let ivory = blend(primary, with: Color(hex: "FFF0CE"), amount: 0.46)
         let light = blend(ivory, with: accent, amount: 0.15)
         return ZStack(alignment: .topLeading) {
-            ForEach(phrase.words.indices.dropFirst(), id: \.self) { i in
-                StarLink(start: phrase.point(at: i - 1), end: phrase.point(at: i))
-                    .stroke(light.opacity(i == last ? 0.83 : 0.56), lineWidth: i == last ? 0.75 : 0.52)
-                    .transition(.opacity)
-            }
             ForEach(phrase.words.indices, id: \.self) { i in
                 let current = i == last
-                let word = phrase.words[i]
-                let prominent = current && (phrase.isLineEnding || (word.count >= 4 && i % 3 != 1))
-                let point = phrase.point(at: i)
-                let radius: CGFloat = current ? 13 : 2.2
                 ZStack {
                     if current {
-                        Circle().stroke(ivory.opacity(0.84), lineWidth: 0.8)
-                            .frame(width: 2 * radius, height: 2 * radius)
+                        Circle().stroke(ivory.opacity(0.84), lineWidth: 0.8 * layoutScale)
+                            .frame(width: 26 * layoutScale, height: 26 * layoutScale)
                     }
                     StarPoint().fill(ivory)
-                        .frame(width: current ? 11 : 4.4, height: current ? 13 : 5.4)
+                        .frame(width: (current ? 11 : 4.4) * layoutScale, height: (current ? 13 : 5.4) * layoutScale)
                 }
-                .position(point)
-                Text(verbatim: word)
-                    .font(type(prominent ? 41 : current ? 22 : 9, current: current, prominent: prominent))
-                    .tracking(prominent ? -1.5 : 0)
-                    .foregroundStyle(current ? ivory : ivory.opacity(0.83))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.32)
-                    .frame(width: min(current ? 242 : 98, 2 * min(point.x - 4, 596 - point.x)))
-                    .position(x: point.x, y: point.y + (prominent ? 37 : current ? 28 : 10))
-                    .zIndex(current ? 2 : 1)
+                .position(points[i])
+            }
+            ConstellationLabels(points: points, scale: layoutScale, pixel: pixel) {
+                ForEach(phrase.words.indices, id: \.self) { i in
+                    let current = i == last
+                    let word = phrase.words[i]
+                    let prominent = current && (phrase.isLineEnding || (word.count >= 4 && i % 3 != 1))
+                    Text(verbatim: word)
+                        .font(type((prominent ? 41 : current ? 23 : 11.5) * layoutScale, current: current, prominent: prominent))
+                        .tracking((prominent ? -1.05 : current ? 0 : 0.08) * layoutScale)
+                        .foregroundStyle(current ? ivory : ivory.opacity(0.91))
+                        .lineLimit(current && word.count > 24 ? 2 : 1)
+                        .minimumScaleFactor(0.4)
+                        .multilineTextAlignment(.center)
+                        .anchorPreference(key: ConstellationWordBounds.self, value: .bounds) { [$0] }
+                        .shadow(color: .black.opacity(0.50), radius: 0.8 * layoutScale, y: 0.8 * layoutScale)
+                        .zIndex(current ? 1 : 0)
+                }
             }
         }
-        .frame(width: 600, height: 320)
-        .shadow(color: .black.opacity(0.59), radius: 2, y: 1)
+        .frame(width: 600 * layoutScale, height: 320 * layoutScale)
+        .backgroundPreferenceValue(ConstellationWordBounds.self) { anchors in
+            GeometryReader { geometry in
+                let letters = Path { path in
+                    for anchor in anchors {
+                        path.addRect(geometry[anchor].insetBy(dx: -3 * layoutScale, dy: -layoutScale))
+                    }
+                }
+                ForEach(points.indices.dropFirst(), id: \.self) { i in
+                    StarLink(start: points[i - 1], end: points[i], excluding: letters)
+                        .stroke(light.opacity(i == last ? 0.83 : 0.56), lineWidth: (i == last ? 0.75 : 0.52) * layoutScale)
+                        .transition(.opacity)
+                }
+            }
+        }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: last)
     }
 
@@ -121,14 +146,80 @@ struct ConstellationScene: View {
     }
 }
 
+// Place the sung word first. Trail labels can tuck above or beside a star
+// when the usual position below it is occupied. Measure the actual chosen font.
+private struct ConstellationLabels: Layout {
+    let points: [CGPoint]
+    let scale: CGFloat
+    let pixel: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        CGSize(width: 600 * scale, height: 320 * scale)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard points.count == subviews.count else { return }
+        let field = bounds.insetBy(dx: 5 * scale, dy: 4 * scale)
+        let last = points.count - 1
+        var occupied = points.indices.map { i in
+            let radius = (i == last ? 13 : 3) * scale
+            return CGRect(x: bounds.minX + points[i].x - radius, y: bounds.minY + points[i].y - radius,
+                          width: 2 * radius, height: 2 * radius)
+        }
+
+        for i in subviews.indices.reversed() {
+            let width = min(field.width, (i == last ? 360 : 110) * scale)
+            let fit = ProposedViewSize(width: width, height: nil)
+            let size = subviews[i].sizeThatFits(fit)
+            let gap = (i == last ? 16 : 5) * scale
+            let x = bounds.minX + points[i].x
+            let y = bounds.minY + points[i].y
+            let origins = [
+                CGPoint(x: x - size.width / 2, y: y + gap),
+                CGPoint(x: x - size.width / 2, y: y - gap - size.height),
+                CGPoint(x: x + gap, y: y - size.height / 2),
+                CGPoint(x: x - gap - size.width, y: y - size.height / 2)
+            ]
+            var best = CGRect.zero
+            var leastOverlap = CGFloat.infinity
+            for origin in origins {
+                let left = min(max(origin.x, field.minX), field.maxX - size.width)
+                let top = min(max(origin.y, field.minY), field.maxY - size.height)
+                let rect = CGRect(x: (left / pixel).rounded() * pixel, y: (top / pixel).rounded() * pixel,
+                                  width: size.width, height: size.height)
+                let overlap = occupied.reduce(CGFloat.zero) { total, other in
+                    let intersection = rect.intersection(other)
+                    return total + intersection.width * intersection.height
+                }
+                if overlap < leastOverlap {
+                    best = rect
+                    leastOverlap = overlap
+                    if overlap == 0 { break }
+                }
+            }
+            subviews[i].place(at: best.origin, anchor: .topLeading, proposal: fit)
+            occupied.append(best.insetBy(dx: -2 * scale, dy: -1.5 * scale))
+        }
+    }
+}
+
+private struct ConstellationWordBounds: PreferenceKey {
+    static let defaultValue: [Anchor<CGRect>] = []
+
+    static func reduce(value: inout [Anchor<CGRect>], nextValue: () -> [Anchor<CGRect>]) {
+        value.append(contentsOf: nextValue())
+    }
+}
+
 private struct StarLink: Shape {
     let start: CGPoint
     let end: CGPoint
+    let excluding: Path
     func path(in rect: CGRect) -> Path {
         Path { path in
             path.move(to: start)
             path.addLine(to: end)
-        }
+        }.lineSubtraction(excluding)
     }
 }
 
