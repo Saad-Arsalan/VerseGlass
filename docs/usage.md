@@ -22,15 +22,13 @@ Choose **Open Listening View** from the VerseGlass menu bar to see the current r
 2. In System Settings, select **Verseglass** as your screen saver. On macOS 27, open **Wallpaper → Screen Saver → Custom**. Find Verseglass under **Other**.
 3. Keep VerseGlass running and start a song. From the unlocked desktop, choose **Start Lyric Screen Saver** in the VerseGlass menu bar. Allow System Events automation if prompted.
 
-For the keyboard shortcut, enable **Start screen saver on lock during playback** in the **Lock Screen** panel. While a song plays, press **Control–Command–Q** once. macOS locks normally and VerseGlass requests the selected saver. If the full-screen VerseGlass saver has not responded, the app makes one fallback request to the system screen saver host. On macOS 27.0.1 we observed both requests succeed while the lock screen still showed only wallpaper and the clock. The menu command starts the saver from the desktop. Your macOS password settings govern when you’ll be asked to unlock. For silent notifications showing each lyric line, enable **Lyric notification banners** in the Lock Screen panel.
+### Lock with Control–Command–Q
 
-### Saver-first shortcut on Mac
+Select **Verseglass** as your system screen saver. In VerseGlass → **Lock Screen**, enable **Show lyrics** and **Start lyrics first on ⌃⌘Q**. While a song plays, press **Control–Command–Q** once. The shortcut starts the selected saver. With macOS set to require a password immediately, the saver can lock the session while the words animate.
 
-The experimental **Start lyrics first on ⌃⌘Q** option is off by default. It asks for permission to handle keypresses across apps. On macOS 27.0.1 this permission appears under **Privacy & Security → Device Control and Data Access**. You can leave it off and use **Start Lyric Screen Saver** from the VerseGlass menu. With the Mac set to require a password immediately, we verified that starting the saver this way locked the session while the lyrics kept moving. The one-press keyboard path is still unverified.
+VerseGlass registers that one shortcut during playback. Device Control and Accessibility can stay off. System Events may ask for Automation access to start the saver. If the session is still unlocked after a brief wait, VerseGlass asks macOS to lock immediately. That fallback uses a private macOS lock function. VerseGlass only registers the shortcut on systems that provide it. Pausing playback, quitting VerseGlass or turning the option off releases the shortcut.
 
-To try the keyboard handler, select **Verseglass** as the system screen saver, choose **Immediately** for the password requirement, and enable **Start lyrics first on ⌃⌘Q** in VerseGlass. If you grant access in System Settings, turn the option off and on again. The panel shows when the handler is ready.
-
-During playback, VerseGlass requests the saver at the beginning of the keypress. If the system has not acknowledged the request and locked within the short time budget, the original keypress continues to macOS. Switching this option off or quitting VerseGlass removes the handler.
+**Start screen saver on lock during playback** also tries to start the saver after other lock events. On macOS 27.0.1, this path can leave the wallpaper and clock visible. **Start Lyric Screen Saver** in the menu starts the saver from the desktop. **Lyric notification banners** is a separate option for showing each line in a notification.
 
 ## Display lighting
 

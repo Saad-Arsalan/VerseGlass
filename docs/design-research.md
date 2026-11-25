@@ -42,6 +42,8 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 
 **Control–Command–Q trial.** Spotify reported active playback before a single lock shortcut. macOS confirmed the session locked. WindowServer continued listing Needle windows as on screen, including a display-sized window. Some of the same windows were listed before locking, so that observation alone cannot distinguish visible lyrics, artwork, and transparent content. Spotify was paused after the observation. Sleep/wake and external-display behavior remain open.
 
+**Lock-screen permissions.** Needle's release notes describe the cover and word-synced lyrics, and its privacy page associates keyboard monitoring with typing sounds. Neither page identifies how Needle draws on the lock screen. On the test Mac, Device Control and Data Access was off for both apps. A separate product, NepTunes, documents a private window-server API for its lock player. VerseGlass uses the system-selected lyric saver and a single registered shortcut. [Needle release notes](https://needlemac.com/changelog.html) · [Needle privacy](https://needlemac.com/privacy.html) · [NepTunes lock-screen player](https://neptunesmac.app/lock-screen/)
+
 ## First implementation
 
 **Listening View** gives the Mac app a dedicated window for the current recording. Switch between cover art and lyrics while the player keeps its place. For this surface, the important test is whether you can switch mid-line, return after a seek, and still recognize what is playing when artwork or lyrics are unavailable.

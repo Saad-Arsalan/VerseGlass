@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import OSLog
 import CoreImage
 import ImageIO
 import Combine
@@ -64,16 +63,22 @@ import Combine
             }
         openWindow()
         saverLauncher = SaverLauncher(engine:engine,prefs:prefs)
+        lockShortcut.availabilityChanged = { [weak self] registered in
+            self?.prefs.shortcutAvailable = registered
+        }
+        lockShortcut.onLockFailure = { [weak self] in
+            guard let self, !SaverLauncher.isLocked else { return }
+            openWindow()
+            let alert = NSAlert()
+            alert.messageText = "Your Mac is still unlocked"
+            alert.informativeText = "VerseGlass released the shortcut. Press Control–Command–Q again to lock with macOS."
+            alert.beginSheetModal(for: window)
+        }
         shortcutState = Publishers.CombineLatest3(prefs.$saverFirstShortcut, prefs.$enabled, engine.$playing)
             .removeDuplicates { a, b in a.0 == b.0 && a.1 == b.1 && a.2 == b.2 }
             .sink { [weak self] enabled, lyricsEnabled, playing in
                 guard let self else { return }
-                let available = lockShortcut.configure(enabled: enabled, playbackActive: lyricsEnabled && playing)
-                prefs.shortcutAvailable = available
-                if enabled {
-                    Logger(subsystem: "local.verseglass.app", category: "lock-shortcut")
-                        .notice("Saver-first shortcut available: \(available, privacy: .public)")
-                }
+                lockShortcut.configure(enabled: enabled, playbackActive: lyricsEnabled && playing)
             }
         engine.start()
     }

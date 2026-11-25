@@ -33,6 +33,10 @@ jobs:
         run: |
           swiftc -swift-version 5 LyricModels.swift ConstellationScene.swift Tests/Constellation.swift -o "$RUNNER_TEMP/constellation"
           "$RUNNER_TEMP/constellation"
+      - name: Test the shortcut's native lock fallback
+        run: |
+          swiftc -swift-version 5 LockShortcut.swift Tests/LockShortcutFallback.swift -o "$RUNNER_TEMP/lock-shortcut"
+          "$RUNNER_TEMP/lock-shortcut"
       - name: Verify both bundles
         shell: bash
         run: |

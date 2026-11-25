@@ -169,6 +169,13 @@ struct Studio: View {
                 settings(name).padding(18).frame(width:298).preferredColorScheme(.dark)
             }
     }
+    private var shortcutStatus: String {
+        if !prefs.enabled { return "Turn on Show lyrics to use the shortcut." }
+        if !engine.playing { return "Waiting for music." }
+        if prefs.shortcutAvailable { return "Ready. Press ⌃⌘Q to lock with the lyric saver." }
+        return "Shortcut unavailable. Use Start Lyric Screen Saver from the menu."
+    }
+
     @ViewBuilder private func settings(_ name:String) -> some View {
         VStack(alignment:.leading,spacing:13) {
             Text(name).font(.headline)
@@ -193,13 +200,7 @@ struct Studio: View {
                 if prefs.startSaverOnLock { Text(prefs.saverMessage).font(.caption).fixedSize(horizontal:false,vertical:true) }
                 Toggle("Start lyrics first on ⌃⌘Q", isOn: $prefs.saverFirstShortcut)
                 if prefs.saverFirstShortcut {
-                    Text(prefs.shortcutAvailable ? "Ready during music playback." : "The shortcut is inactive. It needs permission to handle keypresses across apps. The menu can start the lyric saver with this access off.")
-                        .font(.caption).fixedSize(horizontal: false, vertical: true)
-                    if !prefs.shortcutAvailable {
-                        Button("View permission in System Settings…") {
-                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-                        }
-                    }
+                    Text(shortcutStatus).font(.caption).fixedSize(horizontal: false, vertical: true)
                 }
                 Toggle("Lyric notification banners",isOn:$prefs.lockNotifications)
                 if prefs.lockNotifications {

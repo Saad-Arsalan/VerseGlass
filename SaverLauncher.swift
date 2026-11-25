@@ -20,6 +20,10 @@ import OSLog
             if enabled && !Self.isLocked { run(Self.query, prefs: prefs) }
         }.store(in: &subscriptions)
 
+        prefs.$saverFirstShortcut.removeDuplicates().sink { [weak self] enabled in
+            if enabled && !prefs.startSaverOnLock && !Self.isLocked { self?.run(Self.query, prefs: prefs) }
+        }.store(in: &subscriptions)
+
         let center = DistributedNotificationCenter.default()
         center.publisher(for: SaverPacket.hostActive).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -34,7 +38,7 @@ import OSLog
             .sink { [weak self] _ in
                 guard let self else { return }
                 cancelLockRequests()
-                if prefs.startSaverOnLock { run(Self.query, prefs: prefs) }
+                if prefs.startSaverOnLock || prefs.saverFirstShortcut { run(Self.query, prefs: prefs) }
             }.store(in: &subscriptions)
         center.publisher(for: .init("com.apple.screenIsLocked")).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in

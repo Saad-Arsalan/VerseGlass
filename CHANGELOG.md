@@ -2,8 +2,8 @@
 
 ## v2.4
 
-- Added an opt-in saver-first Control–Command–Q handler on Mac. During playback it requests the selected saver before the standard shortcut is delivered. It only consumes the keypress after macOS confirms the session is already locked.
-- Clarified which keyboard permission the experimental shortcut requests. Starting the lyric saver from the menu works with Device Control and Data Access off.
+- Added an opt-in Control–Command–Q shortcut that starts the lyric saver during playback. It registers only that chord and works with Device Control and Accessibility off.
+- Added a native lock fallback if the saver fails to lock the Mac promptly. Pausing playback or quitting VerseGlass releases the shortcut.
 
 ## v2.3
 
