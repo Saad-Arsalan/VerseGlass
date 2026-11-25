@@ -3,7 +3,7 @@
 ## v2.3
 
 - Fixed a missed screen saver request when VerseGlass started during a locked session. The app rechecks Automation readiness on unlock and checks the actual permission at lock time.
-- When locking during playback, VerseGlass listens for its full-screen saver and tries the macOS screen saver host once if needed.
+- When locking during playback, VerseGlass listens for its full-screen saver and tries the macOS screen saver host once if needed. A live macOS 27.0.1 test still showed the lock wallpaper after Control–Command–Q.
 
 ## v2.2
 
