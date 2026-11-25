@@ -25,6 +25,10 @@ jobs:
           persist-credentials: false
       - name: Build for Apple silicon
         run: ./build.sh
+      - name: Test lyric lookup across album editions
+        run: |
+          swiftc -swift-version 5 Models.swift LyricTiming.swift LyricsStore.swift Tests/LyricsLookup.swift -o "$RUNNER_TEMP/lyrics-lookup"
+          "$RUNNER_TEMP/lyrics-lookup"
       - name: Verify both bundles
         shell: bash
         run: |

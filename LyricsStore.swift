@@ -43,12 +43,15 @@ enum LookupError: LocalizedError {
 
 actor LyricsStore {
     private var limitedUntil = Date.distantPast
-    private let session: URLSession = {
+    private let session: URLSession
+
+    init(session: URLSession? = nil) {
+        if let session { self.session = session; return }
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 8
         config.timeoutIntervalForResource = 12
-        return URLSession(configuration: config)
-    }()
+        self.session = URLSession(configuration: config)
+    }
 
     nonisolated func file(for track: PlaybackTrack) throws -> URL {
         let support = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -124,11 +127,72 @@ actor LyricsStore {
                 return SavedLyrics(content: content, source: "AMLL", artwork: artwork)
             }
         }
+        let content = try await lrclibLyrics(for: track)
+        return SavedLyrics(content: content, source: "LRCLIB", artwork: artwork)
+    }
+
+    private struct Record: Decodable {
+        let trackName: String
+        let artistName: String
+        let albumName: String?
+        let duration: Double?
+        let instrumental: Bool?
+        let syncedLyrics: String?
+
+        var validLyrics: String? {
+            guard instrumental != true, let text = syncedLyrics, TimedLyrics(text) != nil else { return nil }
+            return text
+        }
+    }
+
+    private func lrclibLyrics(for track: PlaybackTrack) async throws -> String {
+        let identity = [URLQueryItem(name: "track_name", value: track.title),
+                        URLQueryItem(name: "artist_name", value: track.artist)]
+        var exact = identity
+        if !track.album.isEmpty { exact.append(URLQueryItem(name: "album_name", value: track.album)) }
+        if (1...3600).contains(track.duration) {
+            exact.append(URLQueryItem(name: "duration", value: String(Int(track.duration.rounded()))))
+        }
+        if let data = try await lrclibRequest("get", query: exact) {
+            let record = try JSONDecoder().decode(Record.self, from: data)
+            if record.instrumental == true { throw LookupError.instrumental }
+            if let lyrics = record.validLyrics { return lyrics }
+        }
+
+        // A compilation can have plain lyrics even when the original release
+        // has timestamps. Keep version qualifiers in the title and require a
+        // close duration so live versions and shortened edits are excluded.
+        guard track.duration.isFinite, track.duration > 0, !track.title.isEmpty, !track.artist.isEmpty,
+              let data = try await lrclibRequest("search", query: identity) else { throw LookupError.missing }
+        let title = Self.matchKey(track.title)
+        let artist = Self.matchKey(track.artist)
+        let album = Self.matchKey(track.album)
+        let records = try JSONDecoder().decode([Record].self, from: data)
+        let candidates = records.filter { record in
+            guard let duration = record.duration, abs(duration - track.duration) <= 2 else { return false }
+            return Self.matchKey(record.trackName) == title && Self.matchKey(record.artistName) == artist
+        }.sorted { lhs, rhs in
+            let leftAlbum = Self.matchKey(lhs.albumName ?? "") == album
+            let rightAlbum = Self.matchKey(rhs.albumName ?? "") == album
+            if leftAlbum != rightAlbum { return leftAlbum }
+            return abs((lhs.duration ?? 0) - track.duration) < abs((rhs.duration ?? 0) - track.duration)
+        }
+        for candidate in candidates {
+            if let lyrics = candidate.validLyrics { return lyrics }
+        }
+        throw LookupError.missing
+    }
+
+    private static func matchKey(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private func lrclibRequest(_ endpoint: String, query: [URLQueryItem]) async throws -> Data? {
+        try Task.checkCancellation()
         guard limitedUntil <= Date() else { throw LookupError.limited }
-        var components = URLComponents(string: "https://lrclib.net/api/get")!
-        var query = [URLQueryItem(name: "track_name", value: track.title), URLQueryItem(name: "artist_name", value: track.artist)]
-        if !track.album.isEmpty { query.append(URLQueryItem(name: "album_name", value: track.album)) }
-        if (1...3600).contains(track.duration) { query.append(URLQueryItem(name: "duration", value: String(Int(track.duration.rounded())))) }
+        var components = URLComponents(string: "https://lrclib.net/api/")!
+        components.path += endpoint
         components.queryItems = query
         guard let url = components.url else { throw LookupError.missing }
         let (data, http) = try await fetch(url)
@@ -137,12 +201,8 @@ actor LyricsStore {
             limitedUntil = Date().addingTimeInterval(max(1, delay) + Double.random(in: 1...4))
             throw LookupError.limited
         }
-        if [400, 404].contains(http.statusCode) { throw LookupError.missing }
+        if [400, 404].contains(http.statusCode) { return nil }
         guard http.statusCode == 200 else { throw LookupError.network }
-        struct Record: Decodable { let syncedLyrics: String?; let instrumental: Bool? }
-        let record = try JSONDecoder().decode(Record.self, from: data)
-        if record.instrumental == true { throw LookupError.instrumental }
-        guard let content = record.syncedLyrics, TimedLyrics(content) != nil else { throw LookupError.missing }
-        return SavedLyrics(content: content, source: "LRCLIB", artwork: artwork)
+        return data
     }
 }

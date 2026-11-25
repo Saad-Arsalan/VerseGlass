@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6
+
+- Fixed desktop lyrics staying hidden after a missed display-wake event. VerseGlass now checks the actual power state of each display when the session changes and during playback.
+- When an album lookup has no synced lyrics, VerseGlass checks other releases for a matching title, artist, and recording duration.
+
 ## v1.5
 
 - Download VerseGlass for Apple silicon as a disk image with a stable download link and a SHA-256 checksum.

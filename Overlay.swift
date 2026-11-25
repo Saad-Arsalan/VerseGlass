@@ -79,14 +79,14 @@ final class OverlayManager {
             }.store(in: &subscriptions)
         workspace.publisher(for: NSWorkspace.screensDidWakeNotification).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.screensAsleep = false
                 self?.resync()
             }.store(in: &subscriptions)
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+            .merge(with: workspace.publisher(for: NSWorkspace.didWakeNotification),
+                   workspace.publisher(for: NSWorkspace.sessionDidBecomeActiveNotification))
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.refresh() }.store(in: &subscriptions)
-        // Recover if the session changes during launch or a notification is
-        // missed over system sleep. The key is present only while locked.
+            .sink { [weak self] _ in self?.resync() }.store(in: &subscriptions)
+        // Re-read both session and display state if sleep or wake events were missed.
         Timer.publish(every: 8, tolerance: 2, on: .main, in: .common).autoconnect()
             .sink { [weak self] _ in self?.resync() }.store(in: &subscriptions)
         resync()
@@ -104,6 +104,10 @@ final class OverlayManager {
         if let session = CGSessionCopyCurrentDictionary() as? [String: Any] {
             locked = session["CGSSessionScreenIsLocked"] as? Bool ?? false
         }
+        let displays = NSScreen.screens.compactMap {
+            ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+        }
+        screensAsleep = displays.allSatisfy { CGDisplayIsAsleep($0) != 0 }
         refresh()
     }
 
@@ -130,6 +134,7 @@ final class OverlayManager {
         if shouldShow {
             for screen in NSScreen.screens {
                 guard let id = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value,
+                      CGDisplayIsAsleep(id) == 0,
                       prefs.displayID == "all" || selected.contains(id)
                         || (prefs.displayID == "main" && id == CGMainDisplayID()) else { continue }
                 required.insert(id)
