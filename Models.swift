@@ -22,6 +22,10 @@ extension Color {
     var artworkThumbnail: Data?
     var effectiveAccent: Color { (matchArtwork ? artworkAccent : nil) ?? Color(hex:colorHex) }
     @Published var startSaverOnLock = d.bool(forKey:"startSaverOnLock") { didSet { Self.d.set(startSaverOnLock, forKey:"startSaverOnLock") } }
+    @Published var saverFirstShortcut = d.bool(forKey: "saverFirstShortcut") {
+        didSet { Self.d.set(saverFirstShortcut, forKey: "saverFirstShortcut") }
+    }
+    @Published var shortcutAvailable = false
     @Published var saverAutomationReady = false
     @Published var saverMessage = "Checking System Events access…"
     @Published var lockNotifications = d.bool(forKey:"lockNotifications") {

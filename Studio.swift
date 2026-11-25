@@ -191,6 +191,16 @@ struct Studio: View {
                 Toggle("Show lyrics",isOn:$prefs.enabled)
                 Toggle("Start screen saver on lock during playback", isOn:$prefs.startSaverOnLock)
                 if prefs.startSaverOnLock { Text(prefs.saverMessage).font(.caption).fixedSize(horizontal:false,vertical:true) }
+                Toggle("Start lyrics first on ⌃⌘Q", isOn: $prefs.saverFirstShortcut)
+                if prefs.saverFirstShortcut {
+                    Text(prefs.shortcutAvailable ? "Ready during music playback." : "Allow Verseglass under Accessibility, then turn this option off and on.")
+                        .font(.caption).fixedSize(horizontal: false, vertical: true)
+                    if !prefs.shortcutAvailable {
+                        Button("Open Accessibility Settings…") {
+                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                        }
+                    }
+                }
                 Toggle("Lyric notification banners",isOn:$prefs.lockNotifications)
                 if prefs.lockNotifications {
                     Text(lockLyrics.permissionHint).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false, vertical:true)

@@ -100,7 +100,7 @@ import OSLog
         run(Self.launch, prefs: prefs)
     }
 
-    private nonisolated static var isLocked: Bool {
+    nonisolated static var isLocked: Bool {
         (CGSessionCopyCurrentDictionary() as? [String: Any])?["CGSSessionScreenIsLocked"] as? Bool ?? false
     }
 
@@ -113,6 +113,12 @@ import OSLog
     }
 
     private nonisolated static func requestSelectedSaver() async throws {
+        _ = try sendSelectedSaverRequest(whileLocked: true)
+    }
+
+    // Called on a worker thread. Recheck session and deadline immediately before
+    // sending so a delayed shortcut request cannot launch a saver after unlock.
+    nonisolated static func sendSelectedSaverRequest(whileLocked: Bool, before deadline: DispatchTime = .distantFuture) throws -> Bool {
         let object = NSAppleEventDescriptor.record()
         object.setDescriptor(NSAppleEventDescriptor(typeCode: typeProperty), forKeyword: UInt32(keyAEDesiredClass))
         object.setDescriptor(NSAppleEventDescriptor(enumCode: UInt32(formPropertyID)), forKeyword: UInt32(keyAEKeyForm))
@@ -125,12 +131,13 @@ import OSLog
         let event = NSAppleEventDescriptor(eventClass: suite, eventID: start, targetDescriptor: target,
                                            returnID: -1, transactionID: 0)
         event.setParam(preferences, forKeyword: keyDirectObject)
-        guard !Task.isCancelled, isLocked else { return }
+        guard !Task.isCancelled, isLocked == whileLocked, DispatchTime.now() < deadline else { return false }
         let quiet = NSAppleEventDescriptor.SendOptions(rawValue: UInt(kAEDoNotPromptForUserConsent))
         let reply = try event.sendEvent(options: [.waitForReply, .neverInteract, quiet], timeout: 5)
         if let error = reply.paramDescriptor(forKeyword: keyErrorNumber), error.int32Value != noErr {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(error.int32Value))
         }
+        return true
     }
 
     private func run(_ action: String, prefs: Preferences) {

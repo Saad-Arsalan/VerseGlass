@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import OSLog
 import CoreImage
 import ImageIO
 import Combine
@@ -21,6 +22,8 @@ import Combine
     private let rims = RimPanels()
     private var feed: SaverFeed?
     private var audioState: AnyCancellable?
+    private let lockShortcut = LockShortcut()
+    private var shortcutState: AnyCancellable?
     private var saverLauncher: SaverLauncher?
     private var overlay: OverlayManager!
     private var statusItem: NSStatusItem!
@@ -61,6 +64,17 @@ import Combine
             }
         openWindow()
         saverLauncher = SaverLauncher(engine:engine,prefs:prefs)
+        shortcutState = Publishers.CombineLatest3(prefs.$saverFirstShortcut, prefs.$enabled, engine.$playing)
+            .removeDuplicates { a, b in a.0 == b.0 && a.1 == b.1 && a.2 == b.2 }
+            .sink { [weak self] enabled, lyricsEnabled, playing in
+                guard let self else { return }
+                let available = lockShortcut.configure(enabled: enabled, playbackActive: lyricsEnabled && playing)
+                prefs.shortcutAvailable = available
+                if enabled {
+                    Logger(subsystem: "local.verseglass.app", category: "lock-shortcut")
+                        .notice("Saver-first shortcut available: \(available, privacy: .public)")
+                }
+            }
         engine.start()
     }
     private func loadArtwork(_ url: URL?) {

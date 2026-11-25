@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.4
+
+- Added an opt-in saver-first Control–Command–Q handler on Mac. During playback it requests the selected saver before the standard shortcut is delivered. It only consumes the keypress after macOS confirms the session is already locked.
+
 ## v2.3
 
 - Fixed a missed screen saver request when VerseGlass started during a locked session. The app rechecks Automation readiness on unlock and checks the actual permission at lock time.
