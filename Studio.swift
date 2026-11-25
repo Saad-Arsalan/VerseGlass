@@ -193,10 +193,10 @@ struct Studio: View {
                 if prefs.startSaverOnLock { Text(prefs.saverMessage).font(.caption).fixedSize(horizontal:false,vertical:true) }
                 Toggle("Start lyrics first on ⌃⌘Q", isOn: $prefs.saverFirstShortcut)
                 if prefs.saverFirstShortcut {
-                    Text(prefs.shortcutAvailable ? "Ready during music playback." : "Allow Verseglass under Accessibility, then turn this option off and on.")
+                    Text(prefs.shortcutAvailable ? "Ready during music playback." : "The shortcut is inactive. It needs permission to handle keypresses across apps. The menu can start the lyric saver with this access off.")
                         .font(.caption).fixedSize(horizontal: false, vertical: true)
                     if !prefs.shortcutAvailable {
-                        Button("Open Accessibility Settings…") {
+                        Button("View permission in System Settings…") {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
                         }
                     }

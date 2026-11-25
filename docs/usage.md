@@ -26,7 +26,9 @@ For the keyboard shortcut, enable **Start screen saver on lock during playback**
 
 ### Saver-first shortcut on Mac
 
-Select **Verseglass** as the system screen saver and choose **Immediately** for the password requirement in macOS Lock Screen settings. In VerseGlass → **Lock Screen**, turn on **Start lyrics first on ⌃⌘Q**. The panel shows whether the shortcut is ready. If macOS requires Accessibility access, grant it to the installed Verseglass app and toggle the option again.
+The experimental **Start lyrics first on ⌃⌘Q** option is off by default. It asks for permission to handle keypresses across apps. On macOS 27.0.1 this permission appears under **Privacy & Security → Device Control and Data Access**. You can leave it off and use **Start Lyric Screen Saver** from the VerseGlass menu. With the Mac set to require a password immediately, we verified that starting the saver this way locked the session while the lyrics kept moving. The one-press keyboard path is still unverified.
+
+To try the keyboard handler, select **Verseglass** as the system screen saver, choose **Immediately** for the password requirement, and enable **Start lyrics first on ⌃⌘Q** in VerseGlass. If you grant access in System Settings, turn the option off and on again. The panel shows when the handler is ready.
 
 During playback, VerseGlass requests the saver at the beginning of the keypress. If the system has not acknowledged the request and locked within the short time budget, the original keypress continues to macOS. Switching this option off or quitting VerseGlass removes the handler.
 

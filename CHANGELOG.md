@@ -3,6 +3,7 @@
 ## v2.4
 
 - Added an opt-in saver-first Control–Command–Q handler on Mac. During playback it requests the selected saver before the standard shortcut is delivered. It only consumes the keypress after macOS confirms the session is already locked.
+- Clarified which keyboard permission the experimental shortcut requests. Starting the lyric saver from the menu works with Device Control and Data Access off.
 
 ## v2.3
 
