@@ -22,7 +22,7 @@ Choose **Open Listening View** from the VerseGlass menu bar to see the current r
 2. In System Settings, select **Verseglass** as your screen saver. On macOS 27, open **Wallpaper → Screen Saver → Custom**. Find Verseglass under **Other**.
 3. Keep VerseGlass running and start a song. From the unlocked desktop, choose **Start Lyric Screen Saver** in the VerseGlass menu bar. Allow System Events automation if prompted.
 
-Use the menu command for full-screen lyrics. Pressing **Control–Command–Q** directly can leave the wallpaper visible even if **Start screen saver on lock during playback** is on. Your macOS password settings govern when you’ll be asked to unlock. For silent notifications showing each lyric line, enable **Lyric notification banners** in the Lock Screen panel.
+For the keyboard shortcut, enable **Start screen saver on lock during playback** in the **Lock Screen** panel. While a song plays, press **Control–Command–Q** once. macOS locks normally and VerseGlass requests the selected saver. If the full-screen VerseGlass saver has not responded, the app makes one fallback request to the system screen saver host. Your macOS password settings govern when you’ll be asked to unlock. For silent notifications showing each lyric line, enable **Lyric notification banners** in the Lock Screen panel.
 
 ## Display lighting
 

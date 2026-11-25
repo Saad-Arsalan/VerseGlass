@@ -9,8 +9,10 @@ import SwiftUI
     private var reportedLyrics = false
     private let log = Logger(subsystem:"local.verseglass.app",category:"saver-host")
     private var lastRequest = Date.distantPast
-    func start() {
+    private var fullScreenHost = false
+    func start(preview: Bool) {
         guard receiver == nil else { return }
+        fullScreenHost = !preview
         let center = DistributedNotificationCenter.default()
         receiver = center.addObserver(forName:SaverPacket.response, object:nil, queue:.main) { [weak self] note in
             guard let data = note.userInfo?["frame"] as? Data, data.count <= SaverPacket.maximumBytes,
@@ -30,7 +32,11 @@ import SwiftUI
     func tick() {
         if lastRequest.timeIntervalSinceNow < -1 {
             lastRequest = Date()
-            DistributedNotificationCenter.default().postNotificationName(SaverPacket.request,object:nil,userInfo:nil,options:[.deliverImmediately])
+            let center = DistributedNotificationCenter.default()
+            center.postNotificationName(SaverPacket.request, object: nil, userInfo: nil, options: [.deliverImmediately])
+            if fullScreenHost {
+                center.postNotificationName(SaverPacket.hostActive, object: nil, userInfo: nil, options: [.deliverImmediately])
+            }
         }
         if let packet, packet.date.timeIntervalSinceNow < -2 { self.packet=nil }
     }
@@ -58,7 +64,7 @@ final class VerseglassSaverView: ScreenSaverView {
             addSubview(view)
             hosted=view
         }
-        model.start()
+        model.start(preview: isPreview)
     }
     override func animateOneFrame() { model.tick() }
     override func stopAnimation() {

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3
+
+- Fixed a missed screen saver request when VerseGlass started during a locked session. The app rechecks Automation readiness on unlock and checks the actual permission at lock time.
+- When locking during playback, VerseGlass listens for its full-screen saver and tries the macOS screen saver host once if needed.
+
 ## v2.2
 
 - Documented the installed Needle trial across 12 settings sections and recorded the playback checks still outstanding. Kept Wevy on the reference shelf pending its Instagram link. This is a research-notes release.

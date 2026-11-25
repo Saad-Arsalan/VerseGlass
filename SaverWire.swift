@@ -4,6 +4,7 @@ import Foundation
 // Only the recent lines needed for drawing are sent, and only in this session.
 struct SaverPacket: Codable {
     static let maximumBytes = 16_384
+    static let hostActive = Notification.Name("local.verseglass.saver.host-active")
     static let request = Notification.Name("local.verseglass.saver.request")
     static let response = Notification.Name("local.verseglass.saver.frame")
     let date: Date
