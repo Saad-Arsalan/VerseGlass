@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2
+
+- Documented the installed Needle trial across 12 settings sections and recorded the playback checks still outstanding. Kept Wevy on the reference shelf pending its Instagram link. This is a research-notes release.
+
 ## v2.1
 
 - Added **Open Listening View** on Mac. Switch between album artwork and timed lyrics in a dedicated window while your music keeps playing.

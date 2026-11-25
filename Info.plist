@@ -7,8 +7,8 @@
 <key>CFBundleExecutable</key><string>Verseglass</string>
 <key>CFBundleIconFile</key><string>Verseglass</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>2.1</string>
-<key>CFBundleVersion</key><string>10</string>
+<key>CFBundleShortVersionString</key><string>2.2</string>
+<key>CFBundleVersion</key><string>11</string>
 <key>LSMinimumSystemVersion</key><string>15.0</string>
 <key>LSUIElement</key><true/>
 <key>NSAudioCaptureUsageDescription</key><string>Verseglass measures system audio levels on this Mac to animate the display edges.</string>
