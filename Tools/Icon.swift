@@ -21,14 +21,16 @@ struct DrawVerseglassIcon {
         context.restoreGState()
     }
 
-    static func image(size: Int) -> NSBitmapImageRep {
+    static func image(size: Int, fullBleed: Bool = false) -> NSBitmapImageRep {
         let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
         let context = NSGraphicsContext(bitmapImageRep: rep)!.cgContext
         // Match the SwiftUI mark's coordinate convention.
         context.translateBy(x: 0, y: CGFloat(size))
         let scale = CGFloat(size) / 128
         context.scaleBy(x: scale, y: -scale)
-        let tile = CGPath(roundedRect: CGRect(x: 8, y: 7, width: 112, height: 112), cornerWidth: 25, cornerHeight: 25, transform: nil)
+        let tile = fullBleed
+            ? CGPath(rect: CGRect(x: 0, y: 0, width: 128, height: 128), transform: nil)
+            : CGPath(roundedRect: CGRect(x: 8, y: 7, width: 112, height: 112), cornerWidth: 25, cornerHeight: 25, transform: nil)
         context.saveGState()
         context.setShadow(offset: CGSize(width: 0, height: -1.7), blur: 2.6, color: color(0x180c14, alpha: 0.35))
         context.addPath(tile)
@@ -57,6 +59,18 @@ struct DrawVerseglassIcon {
     }
 
     static func main() throws {
+        if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--ipad" {
+            let size = 1024
+            let image = image(size: size, fullBleed: true).cgImage!
+            // iPad app icons use an opaque, full-bleed canvas. The system applies the corner mask.
+            let context = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8,
+                                    bytesPerRow: size * 4, space: space,
+                                    bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+            context.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+            let png = NSBitmapImageRep(cgImage: context.makeImage()!)
+            try png.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: CommandLine.arguments[2]))
+            return
+        }
         let target = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
         for points in [16, 32, 128, 256, 512] {
             for scale in [1, 2] {

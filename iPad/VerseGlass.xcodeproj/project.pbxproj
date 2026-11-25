@@ -1,0 +1,586 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2C286139962D7E190B46ED08 /* VerseGlassPadApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD5179162F46FE0B226962A /* VerseGlassPadApp.swift */; };
+		761D18C11F50B5980D1854C0 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA361DFFD19A013CA09D4F2F /* Styles.swift */; };
+		7B8E22FDFD80C19D3D300E64 /* RimSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD540B31EF36885B7E23919E /* RimSurface.swift */; };
+		8800A81F4007E43C2C9B195F /* PlaybackUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD8CFBD880F290CC48B403F /* PlaybackUITests.swift */; };
+		883F94BA2F769ABB50303B1E /* ConstellationInk.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 28A2BAEBB82DEA22E12A7E02 /* ConstellationInk.jpg */; };
+		96800467648EF78D767B0505 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5A8786880EA6E161AE20D6D /* Assets.xcassets */; };
+		A0835DF213EE8939463B5908 /* SaverWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB50AC23AC19C5EE4C89EC8 /* SaverWire.swift */; };
+		A0CE7D67EBB9679A11763971 /* PadPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88699943D0E7A7AC8F1F669 /* PadPlayer.swift */; };
+		A62F085CBDDE42ECFEEEC4DD /* LyricTiming.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E19D16C46007C7C76B5812 /* LyricTiming.swift */; };
+		C4AE8711470C44C87F4D6932 /* ConstellationBackdrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B4A321E9FE53F1DBCFCFF8 /* ConstellationBackdrop.swift */; };
+		CD7032D32B446BA3F2AC0A49 /* PadPlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F717439D50D9A4C6616DA9 /* PadPlaybackTests.swift */; };
+		DC8FD9A97927D3034124254C /* LyricsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADFD02130409F4FB8F3ACAE /* LyricsStore.swift */; };
+		F28CB327773B2968ABCDE9FA /* ConstellationScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA834C1DAAF01E2E7FFD6A82 /* ConstellationScene.swift */; };
+		F4B068B03B8F685864D99F89 /* LyricModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EC3ECEAFE78D6E321D7ACDE /* LyricModels.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		49E9A633498C5121D530FD74 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FF12A3F75D6B7160A1C5CD0E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8509C7585251137A73BA9934;
+			remoteInfo = VerseGlass;
+		};
+		874BDC434B64F92D6D79BBE9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FF12A3F75D6B7160A1C5CD0E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8509C7585251137A73BA9934;
+			remoteInfo = VerseGlass;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0DB7514E25B74B460C4D93AA /* VerseGlassUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VerseGlassUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		25B4A321E9FE53F1DBCFCFF8 /* ConstellationBackdrop.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConstellationBackdrop.swift; sourceTree = "<group>"; };
+		28A2BAEBB82DEA22E12A7E02 /* ConstellationInk.jpg */ = {isa = PBXFileReference; includeInIndex = 1; name = ConstellationInk.jpg; path = Resources/ConstellationInk.jpg; sourceTree = "<group>"; };
+		697D0FBC8A03B133ECC2471C /* VerseGlass.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VerseGlass.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6DD5179162F46FE0B226962A /* VerseGlassPadApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VerseGlassPadApp.swift; sourceTree = "<group>"; };
+		8233097ED817F998D95F811A /* VerseGlassTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VerseGlassTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EC3ECEAFE78D6E321D7ACDE /* LyricModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LyricModels.swift; sourceTree = "<group>"; };
+		9CD8CFBD880F290CC48B403F /* PlaybackUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlaybackUITests.swift; sourceTree = "<group>"; };
+		9FB50AC23AC19C5EE4C89EC8 /* SaverWire.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaverWire.swift; sourceTree = "<group>"; };
+		A4E19D16C46007C7C76B5812 /* LyricTiming.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LyricTiming.swift; sourceTree = "<group>"; };
+		AA361DFFD19A013CA09D4F2F /* Styles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		B5A8786880EA6E161AE20D6D /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BA834C1DAAF01E2E7FFD6A82 /* ConstellationScene.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConstellationScene.swift; sourceTree = "<group>"; };
+		BADFD02130409F4FB8F3ACAE /* LyricsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LyricsStore.swift; sourceTree = "<group>"; };
+		DD540B31EF36885B7E23919E /* RimSurface.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RimSurface.swift; sourceTree = "<group>"; };
+		E5F717439D50D9A4C6616DA9 /* PadPlaybackTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PadPlaybackTests.swift; sourceTree = "<group>"; };
+		F88699943D0E7A7AC8F1F669 /* PadPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PadPlayer.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0C77ECF3E630C4227151D90A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1425CF0B0F08057F914C4E16 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		897518B57E0AEAD45013F9FF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		01EED76B025749F29F670BC3 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				8EC3ECEAFE78D6E321D7ACDE /* LyricModels.swift */,
+				A4E19D16C46007C7C76B5812 /* LyricTiming.swift */,
+				AA361DFFD19A013CA09D4F2F /* Styles.swift */,
+				BADFD02130409F4FB8F3ACAE /* LyricsStore.swift */,
+				BA834C1DAAF01E2E7FFD6A82 /* ConstellationScene.swift */,
+				25B4A321E9FE53F1DBCFCFF8 /* ConstellationBackdrop.swift */,
+				28A2BAEBB82DEA22E12A7E02 /* ConstellationInk.jpg */,
+				DD540B31EF36885B7E23919E /* RimSurface.swift */,
+				9FB50AC23AC19C5EE4C89EC8 /* SaverWire.swift */,
+			);
+			name = Shared;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		4BEA862910A74DB59278147A = {
+			isa = PBXGroup;
+			children = (
+				FA3F0F41DF62F9C1C40DB48B /* Products */,
+				01EED76B025749F29F670BC3 /* Shared */,
+				7699F2F2F0823ECBAEF77303 /* iPad */,
+				5EC2FB69EFCD687CD063C623 /* Tests */,
+			);
+			sourceTree = "<group>";
+		};
+		5EC2FB69EFCD687CD063C623 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				9CD8CFBD880F290CC48B403F /* PlaybackUITests.swift */,
+				E5F717439D50D9A4C6616DA9 /* PadPlaybackTests.swift */,
+			);
+			name = Tests;
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		7699F2F2F0823ECBAEF77303 /* iPad */ = {
+			isa = PBXGroup;
+			children = (
+				6DD5179162F46FE0B226962A /* VerseGlassPadApp.swift */,
+				F88699943D0E7A7AC8F1F669 /* PadPlayer.swift */,
+				B5A8786880EA6E161AE20D6D /* Assets.xcassets */,
+			);
+			name = iPad;
+			sourceTree = "<group>";
+		};
+		FA3F0F41DF62F9C1C40DB48B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				697D0FBC8A03B133ECC2471C /* VerseGlass.app */,
+				0DB7514E25B74B460C4D93AA /* VerseGlassUITests.xctest */,
+				8233097ED817F998D95F811A /* VerseGlassTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		485B0A3B270FE5C0CC7BCDB1 /* VerseGlassTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C810DF691366D48FE77CC392 /* Build configuration list for PBXNativeTarget "VerseGlassTests" */;
+			buildPhases = (
+				A409EDAE7BDFC993B6829E67 /* Sources */,
+				1425CF0B0F08057F914C4E16 /* Frameworks */,
+				31FBC4621EE6CA9B88FFEAD5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				848DA52854CA22DCAE22424B /* PBXTargetDependency */,
+			);
+			name = VerseGlassTests;
+			productName = VerseGlassTests;
+			productReference = 8233097ED817F998D95F811A /* VerseGlassTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		8509C7585251137A73BA9934 /* VerseGlass */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9C7C1F75F360345D695920E /* Build configuration list for PBXNativeTarget "VerseGlass" */;
+			buildPhases = (
+				E51AA2DE1C405B00C2210E3F /* Sources */,
+				0C77ECF3E630C4227151D90A /* Frameworks */,
+				0145E41B6010D9088C99FE6D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VerseGlass;
+			productName = VerseGlass;
+			productReference = 697D0FBC8A03B133ECC2471C /* VerseGlass.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A93F7DBB4E88E27C11ADD997 /* VerseGlassUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D47DB76F23E441D3F9539CA1 /* Build configuration list for PBXNativeTarget "VerseGlassUITests" */;
+			buildPhases = (
+				CFD79B3370C6C99FA4685AEE /* Sources */,
+				897518B57E0AEAD45013F9FF /* Frameworks */,
+				720FF506B2D3DC0C10DF9213 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				31CCA19B7D57C19EA7D08A19 /* PBXTargetDependency */,
+			);
+			name = VerseGlassUITests;
+			productName = VerseGlassUITests;
+			productReference = 0DB7514E25B74B460C4D93AA /* VerseGlassUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FF12A3F75D6B7160A1C5CD0E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					485B0A3B270FE5C0CC7BCDB1 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 8509C7585251137A73BA9934;
+					};
+					8509C7585251137A73BA9934 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					A93F7DBB4E88E27C11ADD997 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 8509C7585251137A73BA9934;
+					};
+				};
+			};
+			buildConfigurationList = 8B8962A63D6BF98B4096CFEE /* Build configuration list for PBXProject "VerseGlass" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4BEA862910A74DB59278147A;
+			minimizedProjectReferenceProxies = 0;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FA3F0F41DF62F9C1C40DB48B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8509C7585251137A73BA9934 /* VerseGlass */,
+				A93F7DBB4E88E27C11ADD997 /* VerseGlassUITests */,
+				485B0A3B270FE5C0CC7BCDB1 /* VerseGlassTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0145E41B6010D9088C99FE6D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				883F94BA2F769ABB50303B1E /* ConstellationInk.jpg in Resources */,
+				96800467648EF78D767B0505 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		31FBC4621EE6CA9B88FFEAD5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		720FF506B2D3DC0C10DF9213 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A409EDAE7BDFC993B6829E67 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CD7032D32B446BA3F2AC0A49 /* PadPlaybackTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFD79B3370C6C99FA4685AEE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8800A81F4007E43C2C9B195F /* PlaybackUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E51AA2DE1C405B00C2210E3F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F4B068B03B8F685864D99F89 /* LyricModels.swift in Sources */,
+				A62F085CBDDE42ECFEEEC4DD /* LyricTiming.swift in Sources */,
+				761D18C11F50B5980D1854C0 /* Styles.swift in Sources */,
+				DC8FD9A97927D3034124254C /* LyricsStore.swift in Sources */,
+				F28CB327773B2968ABCDE9FA /* ConstellationScene.swift in Sources */,
+				C4AE8711470C44C87F4D6932 /* ConstellationBackdrop.swift in Sources */,
+				2C286139962D7E190B46ED08 /* VerseGlassPadApp.swift in Sources */,
+				A0CE7D67EBB9679A11763971 /* PadPlayer.swift in Sources */,
+				7B8E22FDFD80C19D3D300E64 /* RimSurface.swift in Sources */,
+				A0835DF213EE8939463B5908 /* SaverWire.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		31CCA19B7D57C19EA7D08A19 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = VerseGlass;
+			target = 8509C7585251137A73BA9934 /* VerseGlass */;
+			targetProxy = 874BDC434B64F92D6D79BBE9 /* PBXContainerItemProxy */;
+		};
+		848DA52854CA22DCAE22424B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = VerseGlass;
+			target = 8509C7585251137A73BA9934 /* VerseGlass */;
+			targetProxy = 49E9A633498C5121D530FD74 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0FF2F94DE6CBFD74F1978460 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad.tests;
+				SKIP_INSTALL = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VerseGlass.app/VerseGlass";
+			};
+			name = Release;
+		};
+		192639027D36C0359BF57203 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "VerseGlass follows the track playing in Music to show its lyrics in sync.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3FDB1EAD7D1D5A3D673358AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "VerseGlass follows the track playing in Music to show its lyrics in sync.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		4A586FDBA284CF40AE6895E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad.uitests;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TEST_TARGET_NAME = VerseGlass;
+			};
+			name = Debug;
+		};
+		672A7761E013502D51A9596E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad.uitests;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TEST_TARGET_NAME = VerseGlass;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		77E9652107A13B7CDEC785C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 9;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		796B7ED8FE6DB90F86E240D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = local.verseglass.ipad.tests;
+				SKIP_INSTALL = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VerseGlass.app/VerseGlass";
+			};
+			name = Debug;
+		};
+		C122E8F4FB76E1AC84BBFABB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 9;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8B8962A63D6BF98B4096CFEE /* Build configuration list for PBXProject "VerseGlass" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C122E8F4FB76E1AC84BBFABB /* Debug */,
+				77E9652107A13B7CDEC785C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A9C7C1F75F360345D695920E /* Build configuration list for PBXNativeTarget "VerseGlass" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				192639027D36C0359BF57203 /* Release */,
+				3FDB1EAD7D1D5A3D673358AF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C810DF691366D48FE77CC392 /* Build configuration list for PBXNativeTarget "VerseGlassTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FF2F94DE6CBFD74F1978460 /* Release */,
+				796B7ED8FE6DB90F86E240D0 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D47DB76F23E441D3F9539CA1 /* Build configuration list for PBXNativeTarget "VerseGlassUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				672A7761E013502D51A9596E /* Release */,
+				4A586FDBA284CF40AE6895E1 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FF12A3F75D6B7160A1C5CD0E /* Project object */;
+}

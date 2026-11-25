@@ -1,5 +1,11 @@
 # Changelog
 
+## v2
+
+- Added a native iPad app with the Constellation scene, all 13 lyric styles, full-screen playback, and a built-in silent demo.
+- Follow Apple Music on iPad or play a local audio file with imported LRC lyrics. Apple Music lyric lookup is opt-in. Imported and cached lyrics work offline.
+- Added an unsigned iPad download for personal signing, a simulator playback check, and iPad coverage in the Swift security scan.
+
 ## v1.7
 
 - Rebuilt Constellation around the star trail in [Needle’s reel](https://www.instagram.com/needlemacb/reel/DgJS6sPoyyG/). Each sung word adds a star, earlier words settle into small labels, and emphasized words appear in bold italic type.

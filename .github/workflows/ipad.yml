@@ -1,0 +1,61 @@
+name: iPad simulator
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ipad-${{ github.event.pull_request.head.sha || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and exercise the iPad app
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify the unsigned iPad device package
+        run: ./Tools/package-ipad.sh
+      - name: Exercise local audio, lyric import, and the demo in Simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          runtime="com.apple.CoreSimulator.SimRuntime.iOS-${sdk//./-}"
+          family="com.apple.CoreSimulator.SimRuntime.iOS-${sdk%%.*}-"
+          device=$(xcrun simctl list devices available -j | jq -er --arg exact "$runtime" --arg family "$family" '
+            .devices | to_entries | map(select(.key | startswith($family)))
+            | sort_by(.key != $exact)
+            | [.[].value[] | select(.name | startswith("iPad"))] | first | .udid')
+          xcodebuild -project iPad/VerseGlass.xcodeproj -scheme VerseGlass \
+            -destination "platform=iOS Simulator,id=$device" \
+            -parallel-testing-enabled NO \
+            -derivedDataPath "$RUNNER_TEMP/ipad-build" \
+            -resultBundlePath "$RUNNER_TEMP/VerseGlass.xcresult" test
+
+      - name: Export iPad screenshots
+        if: success()
+        run: |
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/VerseGlass.xcresult" \
+            --output-path "$RUNNER_TEMP/ipad-screenshots"
+      - name: Upload the test report and iPad screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ipad-test-results
+          path: |
+            ${{ runner.temp }}/VerseGlass.xcresult
+            ${{ runner.temp }}/ipad-screenshots
+          if-no-files-found: ignore
+          retention-days: 7

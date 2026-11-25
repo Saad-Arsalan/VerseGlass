@@ -45,9 +45,13 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-extended
-      - name: Compile the app and screen saver for analysis
+      - name: Compile the Mac app, screen saver, and iPad app for analysis
         if: matrix.language == 'swift'
-        run: ./build.sh
+        run: |
+          ./build.sh
+          xcodebuild -project iPad/VerseGlass.xcodeproj -scheme VerseGlass \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/ipad-analysis" build
       - name: Report findings to code scanning
         uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:

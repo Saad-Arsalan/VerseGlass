@@ -1,4 +1,4 @@
-name: Publish macOS release
+name: Publish VerseGlass release
 
 on:
   push:
@@ -18,6 +18,7 @@ jobs:
       contents: read
     env:
       TAG: ${{ github.ref_name }}
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,11 +42,16 @@ jobs:
           awk -v title="## $TAG" '$0 == title { found=1; next } /^## / && found { exit } found { print }' CHANGELOG.md > build/release/notes.md
           grep -q '[^[:space:]]' build/release/notes.md
           printf '\nRequires macOS 15 or later on Apple silicon. The app is ad-hoc signed and has not been notarized by Apple.\n' >> build/release/notes.md
+          printf '\niPadOS 17 or later. The iPad IPA requires personal signing. [iPad installation guide](https://github.com/%s/blob/%s/docs/ipad.md)\n' \
+            "$GITHUB_REPOSITORY" "$TAG" >> build/release/notes.md
 
       - name: Build and package
         run: |
           ./build.sh
           ./Tools/package-release.sh
+          ./Tools/package-ipad.sh
+          cd build/release
+          shasum -a 256 VerseGlass-macOS-arm64.dmg VerseGlass-iPad-unsigned.ipa > SHA256SUMS.txt
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -71,25 +77,26 @@ jobs:
           name: release-bundle
           path: release
 
-      - name: Publish verified disk image and checksum
+      - name: Publish both apps and their checksums
         working-directory: release
         shell: bash
         run: |
           set -euo pipefail
           image=VerseGlass-macOS-arm64.dmg
+          ipad=VerseGlass-iPad-unsigned.ipa
           sha256sum --check --strict SHA256SUMS.txt
           if ! gh release view "$TAG" --json isDraft > /dev/null; then
             gh release create "$TAG" --verify-tag --draft --title "VerseGlass $TAG" --notes-file notes.md
           fi
           metadata=$(gh release view "$TAG" --json assets,isDraft)
           if [[ $(jq -r '.isDraft' <<< "$metadata") == false ]]; then
-            # A published release is final. Verify its public pair on a rerun.
+            # A published release is final. Verify its public downloads on a rerun.
             mkdir published
-            gh release download "$TAG" --pattern "$image" --pattern SHA256SUMS.txt --dir published
-            (cd published && printf '%s  %s\n' "$(sha256sum "$image" | cut -d' ' -f1)" "$image" | cmp - SHA256SUMS.txt)
+            gh release download "$TAG" --pattern "$image" --pattern "$ipad" --pattern SHA256SUMS.txt --dir published
+            (cd published && sha256sum "$image" "$ipad" | cmp - SHA256SUMS.txt)
             exit 0
           fi
-          for asset in "$image" SHA256SUMS.txt; do
+          for asset in "$image" "$ipad" SHA256SUMS.txt; do
             expected="sha256:$(sha256sum "$asset" | cut -d' ' -f1)"
             existing=$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest // "unknown"' <<< "$metadata")
             if [[ -z "$existing" ]]; then

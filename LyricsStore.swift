@@ -74,7 +74,8 @@ actor LyricsStore {
         try Task.checkCancellation()
         var request = URLRequest(url: url)
         let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Verseglass"
-        request.setValue("\(name)/1.0 (personal macOS lyrics player)", forHTTPHeaderField: "User-Agent")
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0"
+        request.setValue("\(name)/\(version) (https://github.com/Saad-Arsalan/VerseGlass)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, data.count <= 2_000_000 else { throw LookupError.network }
         return (data, http)
