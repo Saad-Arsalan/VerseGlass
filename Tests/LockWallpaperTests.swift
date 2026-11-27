@@ -3,12 +3,9 @@ import Combine
 import ImageIO
 
 // Exercise ownership, recovery and the real renderer without changing a desktop.
-struct Frame { var lines: [String] = []; var lineIndex = -1 }
-final class Engine { @Published var frame = Frame(); @Published var playing = false }
-final class Preferences {
-    var enabled = true
-    var displayID = "all"
-    func includesScreen(_ id: String) -> Bool { displayID == "all" || displayID == id }
+final class Engine {
+    @Published var frame = LyricFrame.empty
+    @Published var playing = false
 }
 enum SaverLauncher { static let isLocked = false }
 
@@ -70,27 +67,99 @@ enum SaverLauncher { static let isLocked = false }
             preconditionFailure("Unreadable pictures must fail before setup changes any desktop")
         } catch { }
 
-        let renderer = WallpaperRenderer()
-        let size = CGSize(width: 900, height: 600)
-        let first = try await renderer.line("A quiet sky", over: baseline, size: size)
-        let second = try await renderer.line("Another word", over: baseline, size: size)
-        precondition(first != second)
-        guard let source = CGImageSourceCreateWithData(first as CFData, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { preconditionFailure() }
-        precondition(image.width == 900 && image.height == 600)
-        var pixels = [UInt8](repeating: 0, count: image.width * image.height)
-        pixels.withUnsafeMutableBytes { bytes in
-            let context = CGContext(data: bytes.baseAddress, width: image.width, height: image.height,
-                bitsPerComponent: 8, bytesPerRow: image.width, space: CGColorSpaceCreateDeviceGray(),
-                bitmapInfo: CGImageAlphaInfo.none.rawValue)!
-            context.draw(image, in: CGRect(origin: .zero, size: size))
-        }
-        let bright = pixels.indices.filter { pixels[$0] > 160 }
-        precondition(bright.count > 500, "The rendered picture must contain visible text")
-        precondition(bright.allSatisfy { (175..<420).contains($0 / image.width) },
-                     "Keep the system clock and sign-in area clear")
+        try await checkStyles(over: baseline)
         let scaled = WallpaperRenderer.size(for: CGSize(width: 7680, height: 4320))
         precondition(scaled.width == 3456 && scaled.height == 1944)
-        print("Passed static picture setup and legible, line-specific rendering")
+    }
+
+    private static func snapshot(_ frame: LyricFrame, style: Style = .constellation,
+                                 accent: String = "94DDFF") -> WallpaperStyleFrame? {
+        WallpaperStyleFrame(frame: frame, style: style, fontName: "SF Pro", textSize: 40,
+                            primary: "FFFFFF", secondary: "A6B2C5", accent: accent)
+    }
+
+    @MainActor private static func checkStyles(over baseline: URL) async throws {
+        _ = NSApplication.shared
+        let renderer = WallpaperRenderer()
+        let size = CGSize(width: 900, height: 600)
+        var lyric = LyricFrame(title: "Blue Hour", artist: "VerseGlass", lines: LyricFrame.sample,
+                               lineIndex: 1, wordIndex: 1, progress: 0.3)
+        let early = snapshot(lyric)!
+        lyric.progress += 0.01
+        precondition(snapshot(lyric) == early, "Playback ticks within one word should reuse its picture")
+        lyric.wordIndex = 3
+        let later = snapshot(lyric)!
+        precondition(early != later && later.canFollow(early) && !early.canFollow(later))
+        var jump = lyric
+        jump.wordIndex = 4
+        precondition(!snapshot(jump)!.canFollow(early), "Drop a render when playback jumps several words")
+        var seek = lyric
+        seek.lineIndex = 2
+        precondition(!snapshot(seek)!.canFollow(early))
+        seek = lyric
+        seek.title = "Second recording"
+        precondition(!snapshot(seek)!.canFollow(early))
+        precondition(snapshot(.empty) == nil)
+
+        func render(_ frame: WallpaperStyleFrame) async throws -> [UInt8] {
+            guard let (image, rect) = frame.foreground(for: size, scale: 2) else {
+                preconditionFailure("Could not draw " + frame.style.rawValue)
+            }
+            let safeArea = CGRect(x: 0, y: size.height * 0.15, width: size.width, height: size.height * 0.7)
+            precondition(safeArea.contains(rect), "The lyric artboard must leave room for the clock and sign-in controls")
+            let picture = try await renderer.composite(image, in: rect, over: baseline, size: size,
+                                                       constellation: frame.style == .constellation)
+            guard let source = CGImageSourceCreateWithData(picture as CFData, nil),
+                  let output = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                preconditionFailure("Invalid wallpaper JPEG")
+            }
+            precondition(output.width == Int(size.width) && output.height == Int(size.height))
+            var pixels = [UInt8](repeating: 0, count: output.width * output.height)
+            pixels.withUnsafeMutableBytes { bytes in
+                let context = CGContext(data: bytes.baseAddress, width: output.width, height: output.height,
+                                        bitsPerComponent: 8, bytesPerRow: output.width,
+                                        space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)!
+                context.draw(output, in: CGRect(origin: .zero, size: size))
+            }
+            return pixels
+        }
+
+        var constellation: [UInt8] = []
+        for style in Style.allCases {
+            var earlierWord = lyric
+            earlierWord.wordIndex = 1
+            let first = try await render(snapshot(earlierWord, style: style)!)
+            let next = try await render(snapshot(lyric, style: style)!)
+            let bright = next.indices.filter { next[$0] > 160 }
+            precondition(bright.count > 100, "Missing visible lyric scene in " + style.rawValue)
+            let margins = Int(size.width * size.height * 0.15)
+            precondition(first.prefix(margins) == next.prefix(margins) && first.suffix(margins) == next.suffix(margins),
+                         "Lyric updates overlap system clock or login area in " + style.rawValue)
+            precondition(visiblyDifferent(first, next), "Active word is frozen in " + style.rawValue)
+            if style == .constellation { constellation = next }
+            if style == .nativeDesign {
+                precondition(visiblyDifferent(constellation, next), "The selected style must change the composition")
+            }
+        }
+        var repeated = LyricFrame(title: "Blue Hour", artist: "VerseGlass", lines: ["Again", "Again", "Again"],
+                                  lineIndex: 2, wordIndex: 0, progress: 0)
+        let outgoing = try await render(snapshot(repeated, style: .nativeDesign)!)
+        repeated.firstLineNumber += 1
+        let incoming = try await render(snapshot(repeated, style: .nativeDesign)!)
+        precondition(visiblyDifferent(outgoing, incoming), "Repeated lines must keep their original bubble side")
+        let blue = try await render(snapshot(lyric, style: .fisheye, accent: "407CFA")!)
+        let yellow = try await render(snapshot(lyric, style: .fisheye, accent: "F8D24F")!)
+        precondition(visiblyDifferent(blue, yellow), "The lock-screen highlight should use the selected accent")
+        print("Passed word timing, styled pictures, and clock and sign-in clearance in all 13 styles")
+    }
+
+    private static func visiblyDifferent(_ a: [UInt8], _ b: [UInt8]) -> Bool {
+        precondition(a.count == b.count)
+        var count = 0
+        for i in a.indices where abs(Int(a[i]) - Int(b[i])) > 24 {
+            count += 1
+            if count >= 30 { return true }
+        }
+        return false
     }
 }

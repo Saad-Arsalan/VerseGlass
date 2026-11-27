@@ -280,7 +280,7 @@ private struct WallpaperSettings: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Touch ID lyrics").font(.title2.bold())
-            Text("While music plays, VerseGlass shows each lyric line on the Lock Screen wallpaper.")
+            Text("Your Lock Screen uses the lyric style you select in the gallery. The words change with the song.")
             Text("Your chosen picture replaces your desktop wallpaper and stays after you turn this off. The black option uses a plain image.")
                 .foregroundStyle(.secondary)
             Text("macOS may turn off “Show on all Spaces” and keep lyric images in Wallpaper history.")

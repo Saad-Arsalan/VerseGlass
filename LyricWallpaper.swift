@@ -1,6 +1,5 @@
 import AppKit
 import Combine
-import CoreText
 import ImageIO
 import OSLog
 import UniformTypeIdentifiers
@@ -50,8 +49,10 @@ struct WallpaperSubmission {
     // A completed render must still match the lock generation and the latest line.
     private(set) var generation = 0
     mutating func invalidate() { generation &+= 1 }
-    func isCurrent<T: Equatable>(_ token: Int, requested: T, live: T?) -> Bool {
-        token == generation && requested == live
+    func isCurrent<T: Equatable>(_ token: Int, requested: T, live: T?,
+                                 compatible: (T, T) -> Bool = (==)) -> Bool {
+        guard token == generation, let live else { return false }
+        return compatible(requested, live)
     }
 }
 
@@ -63,12 +64,14 @@ private enum WallpaperError: String, LocalizedError {
     var errorDescription: String? { rawValue }
 }
 
-/// Rasterize off the main thread. The baseline is decoded once per display size;
-/// the clock and sign-in controls remain entirely macOS's.
+/// Prepare the fixed background once, then composite and encode each word off the main thread.
 actor WallpaperRenderer {
-    private var cachedURL: URL?
-    private var cachedEdge = 0
-    private var cachedImage: CGImage?
+    private struct Background: Equatable {
+        let url: URL
+        let size: CGSize
+        let constellation: Bool
+    }
+    private var cachedBackground: (key: Background, image: CGImage)?
 
     nonisolated static func size(for display: CGSize) -> CGSize {
         let scale = min(1, 3456 / max(1, max(display.width, display.height)))
@@ -94,11 +97,11 @@ actor WallpaperRenderer {
         return image
     }
 
-    private nonisolated static func jpeg(_ image: CGImage) throws -> Data {
+    private nonisolated static func jpeg(_ image: CGImage, quality: Double = 0.91) throws -> Data {
         let bytes = NSMutableData()
         guard let output = CGImageDestinationCreateWithData(bytes, UTType.jpeg.identifier as CFString, 1, nil)
         else { throw WallpaperError.render }
-        CGImageDestinationAddImage(output, image, [kCGImageDestinationLossyCompressionQuality: 0.91] as CFDictionary)
+        CGImageDestinationAddImage(output, image, [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary)
         guard CGImageDestinationFinalize(output) else { throw WallpaperError.render }
         return bytes as Data
     }
@@ -112,50 +115,45 @@ actor WallpaperRenderer {
         return try jpeg(black)
     }
 
-    func line(_ text: String, over baseline: URL, size: CGSize) throws -> Data {
-        let edge = Int(max(size.width, size.height))
-        if cachedURL != baseline || cachedEdge != edge || cachedImage == nil {
-            cachedImage = try Self.image(at: baseline, maxEdge: edge)
-            cachedEdge = edge
-            cachedURL = baseline
+    private func background(_ key: Background) throws -> CGImage {
+        if let cachedBackground, cachedBackground.key == key { return cachedBackground.image }
+        let context = try Self.bitmap(key.size)
+        let bounds = CGRect(origin: .zero, size: key.size)
+        let maxEdge = Int(max(key.size.width, key.size.height))
+        func fill(with image: CGImage) {
+            let scale = max(bounds.width / CGFloat(image.width), bounds.height / CGFloat(image.height))
+            let width = CGFloat(image.width) * scale
+            let height = CGFloat(image.height) * scale
+            context.draw(image, in: CGRect(x: (bounds.width - width) / 2, y: (bounds.height - height) / 2,
+                                            width: width, height: height))
         }
-        guard let image = cachedImage else { throw WallpaperError.image }
-        try Task.checkCancellation()
-        let context = try Self.bitmap(size)
-        let bounds = CGRect(origin: .zero, size: size)
-        let scale = max(size.width / CGFloat(image.width), size.height / CGFloat(image.height))
-        let width = CGFloat(image.width) * scale, height = CGFloat(image.height) * scale
         context.interpolationQuality = .high
-        context.draw(image, in: CGRect(x: (size.width - width) / 2, y: (size.height - height) / 2,
-                                        width: width, height: height))
+        fill(with: try Self.image(at: key.url, maxEdge: min(1920, maxEdge)))
         context.setFillColor(CGColor(gray: 0, alpha: 0.60))
         context.fill(bounds)
+        if key.constellation, let url = Bundle.main.url(forResource: "ConstellationInk", withExtension: "jpg"),
+           let ink = try? Self.image(at: url, maxEdge: min(640, maxEdge)) {
+            context.setBlendMode(.screen)
+            context.setAlpha(0.84)
+            fill(with: ink)
+        }
+        guard let backdrop = context.makeImage() else { throw WallpaperError.render }
+        cachedBackground = (key, backdrop)
+        return backdrop
+    }
 
-        let area = CGRect(x: size.width * 0.085, y: size.height * 0.33,
-                          width: size.width * 0.78, height: size.height * 0.30)
-        var pointSize = min(size.width * 0.054, size.height * 0.10)
-        var layout: CTFramesetter
-        var measured: CGSize
-        repeat {
-            let font = CTFontCreateUIFontForLanguage(.emphasizedSystem, pointSize, nil)
-                ?? CTFontCreateWithName("Helvetica-Bold" as CFString, pointSize, nil)
-            let attributed = NSAttributedString(string: String(text.prefix(300)), attributes: [
-                NSAttributedString.Key(kCTFontAttributeName as String): font,
-                NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 1, alpha: 1)
-            ])
-            layout = CTFramesetterCreateWithAttributedString(attributed)
-            measured = CTFramesetterSuggestFrameSizeWithConstraints(layout, CFRange(),
-                nil, CGSize(width: area.width, height: .greatestFiniteMagnitude), nil)
-            if measured.height <= area.height || pointSize <= 14 { break }
-            pointSize *= 0.85
-        } while true
-        let usedHeight = min(area.height, ceil(measured.height) + 2)
-        let rect = CGRect(x: area.minX, y: area.midY - usedHeight / 2, width: area.width, height: usedHeight)
-        let frame = CTFramesetterCreateFrame(layout, CFRange(), CGPath(rect: rect, transform: nil), nil)
-        CTFrameDraw(frame, context)
+    func composite(_ foreground: CGImage, in rect: CGRect, over baseline: URL,
+                   size: CGSize, constellation: Bool = false) throws -> Data {
+        try Task.checkCancellation()
+        let backdrop = try background(Background(url: baseline, size: size, constellation: constellation))
+        let context = try Self.bitmap(size)
+        context.draw(backdrop, in: CGRect(origin: .zero, size: size))
+        context.draw(foreground, in: rect)
         try Task.checkCancellation()
         guard let rendered = context.makeImage() else { throw WallpaperError.render }
-        return try Self.jpeg(rendered)
+        // Keep the foreground at display resolution. Soften only the background
+        // and use a smaller JPEG for these short-lived wallpaper submissions.
+        return try Self.jpeg(rendered, quality: 0.68)
     }
 }
 
@@ -168,9 +166,14 @@ actor WallpaperRenderer {
         let displayUUID: String
         let pictureSlot: Int
     }
-    private struct Line: Equatable {
-        let text: String
+    private struct Scene: Equatable {
+        let content: WallpaperStyleFrame
         let size: CGSize
+        let scale: CGFloat
+
+        func canFollow(_ earlier: Scene) -> Bool {
+            size == earlier.size && scale == earlier.scale && content.canFollow(earlier.content)
+        }
     }
 
     private let files: WallpaperFiles
@@ -187,7 +190,7 @@ actor WallpaperRenderer {
     private var submission = WallpaperSubmission()
     private var activity: NSObjectProtocol?
     private var hasFrames = false
-    private var lastLine: Line?
+    private var lastFrame: Scene?
     private var nextAttempt = ContinuousClock.now
     private var verifyUntil: ContinuousClock.Instant?
     private var nextDesktopCheck = ContinuousClock.now
@@ -280,7 +283,7 @@ actor WallpaperRenderer {
         enabled = true
         status = ""
         renderer = WallpaperRenderer()
-        lastLine = nil
+        lastFrame = nil
         monitor()
     }
 
@@ -315,12 +318,14 @@ actor WallpaperRenderer {
     }
 
     private func monitor() {
-        if enabled, let engine, playback == nil {
-            let line = engine.$frame.map { frame -> String? in
-                guard frame.lines.indices.contains(frame.lineIndex) else { return nil }
-                return frame.lines[frame.lineIndex]
-            }.removeDuplicates()
-            playback = Publishers.CombineLatest(line, engine.$playing.removeDuplicates())
+        if enabled, let engine, let prefs, playback == nil {
+            // Progress ticks animate the saver. Wallpaper needs only discrete word or style changes.
+            let words = engine.$frame.removeDuplicates { lhs, rhs in
+                lhs.wordIndex == rhs.wordIndex && lhs.lineIndex == rhs.lineIndex &&
+                    lhs.title == rhs.title && lhs.artist == rhs.artist && lhs.lines == rhs.lines &&
+                    lhs.firstLineNumber == rhs.firstLineNumber
+            }.map { _ in () }
+            playback = words.merge(with: engine.$playing.removeDuplicates().map { _ in () }, prefs.objectWillChange)
                 .receive(on: DispatchQueue.main).sink { [weak self] _ in self?.refresh() }
         } else if !enabled { playback = nil }
         guard enabled || hasFrames || verifyUntil != nil else { timer = nil; return }
@@ -336,21 +341,21 @@ actor WallpaperRenderer {
         refresh()
     }
 
-    private func currentLine() -> Line? {
+    private func currentScene() -> Scene? {
         guard SaverLauncher.isLocked, enabled, !saverActive(), let screen, allowed(screen),
-              let id = displayID(screen), CGDisplayIsAsleep(id) == 0, let engine, engine.playing else { return nil }
-        let frame = engine.frame
-        guard frame.lines.indices.contains(frame.lineIndex) else { return nil }
-        let text = String(frame.lines[frame.lineIndex].prefix(300)).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return nil }
-        let size = CGSize(width: screen.frame.width * screen.backingScaleFactor,
-                          height: screen.frame.height * screen.backingScaleFactor)
-        return Line(text: text, size: WallpaperRenderer.size(for: size))
+              let id = displayID(screen), CGDisplayIsAsleep(id) == 0, let engine, engine.playing, let prefs,
+              let content = WallpaperStyleFrame(frame: engine.frame, style: prefs.style, fontName: prefs.fontName,
+                  textSize: prefs.textSize, primary: prefs.primaryHex, secondary: prefs.secondaryHex,
+                  accent: prefs.effectiveAccent.rgbHex) else { return nil }
+        let display = CGSize(width: screen.frame.width * screen.backingScaleFactor,
+                             height: screen.frame.height * screen.backingScaleFactor)
+        let size = WallpaperRenderer.size(for: display)
+        return Scene(content: content, size: size, scale: size.width / max(1, screen.frame.width))
     }
 
     private func refresh() {
         guard enabled || hasFrames || verifyUntil != nil else { return }
-        guard let line = currentLine() else { restore(); return }
+        guard let scene = currentScene() else { restore(); return }
         guard let configuration, let screen else { return }
         let current = NSWorkspace.shared.desktopImageURL(for: screen)
         guard files.owns(current, pictureSlot: configuration.pictureSlot) else {
@@ -358,20 +363,35 @@ actor WallpaperRenderer {
             status = "Turn off Touch ID lyrics, then choose a picture again to use this desktop."
             return
         }
-        guard job == nil, ContinuousClock.now >= nextAttempt,
-              line != lastLine || files.frameSlot(current) == nil else { return }
-        let picture = files.picture(configuration.pictureSlot)
+        guard job == nil, scene != lastFrame || files.frameSlot(current) == nil else { return }
         if activity == nil {
             activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep,
                                                              reason: "Updating lyrics on the lock-screen wallpaper")
         }
-        let token = submission.generation, renderer = self.renderer
+        let token = submission.generation
         job = Task {
-            defer { if token == submission.generation { job = nil } }
+            var catchUp = false
+            defer {
+                if token == submission.generation {
+                    job = nil
+                    if catchUp { refresh() }
+                }
+            }
             do {
-                let data = try await renderer.line(line.text, over: picture, size: line.size)
-                // The Mac may have unlocked, switched Spaces, or advanced to another line.
-                guard !Task.isCancelled, submission.isCurrent(token, requested: line, live: currentLine()),
+                // Only one pending render. When fast words arrive during the interval,
+                // sample the newest state at its end instead of queuing old pictures.
+                try await Task.sleep(until: nextAttempt, clock: .continuous)
+                try Task.checkCancellation()
+                guard let requested = currentScene() else { catchUp = true; return }
+                guard let layer = requested.content.foreground(for: requested.size, scale: requested.scale)
+                else { throw WallpaperError.render }
+                let data = try await renderer.composite(layer.image, in: layer.rect,
+                    over: files.picture(configuration.pictureSlot), size: requested.size,
+                    constellation: requested.content.style == .constellation)
+                let live = currentScene()
+                catchUp = live != requested
+                guard !Task.isCancelled,
+                      submission.isCurrent(token, requested: requested, live: live, compatible: { $1.canFollow($0) }),
                       let target = self.screen, uuid(target) == configuration.displayUUID else { return }
                 let active = NSWorkspace.shared.desktopImageURL(for: target)
                 guard let slot = files.nextFrame(after: active, pictureSlot: configuration.pictureSlot) else { return }
@@ -379,8 +399,10 @@ actor WallpaperRenderer {
                 try data.write(to: url, options: .atomic)
                 hasFrames = true
                 try apply(url, on: target)
-                lastLine = line
-                nextAttempt = .now + .milliseconds(850)
+                lastFrame = requested
+                // Detailed photos yield larger files. Give the wallpaper service
+                // time to consume them without queuing more writes on fast verses.
+                nextAttempt = .now + .seconds(max(0.4, Double(data.count) / 900_000))
                 status = ""
                 log.info("Submitted lock-screen lyric frame in slot \(slot, privacy: .public)")
             } catch {
@@ -395,10 +417,14 @@ actor WallpaperRenderer {
     private func restore() {
         if let job { submission.invalidate(); job.cancel(); self.job = nil }
         if let activity { ProcessInfo.processInfo.endActivity(activity); self.activity = nil }
-        let firstRestore = lastLine != nil
-        lastLine = nil
+        let firstRestore = lastFrame != nil
+        lastFrame = nil
         let now = ContinuousClock.now
-        if firstRestore { verifyUntil = now + .seconds(5) }
+        if firstRestore {
+            renderer = WallpaperRenderer()
+            nextAttempt = now
+            verifyUntil = now + .seconds(5)
+        }
         if let until = verifyUntil, now >= until { verifyUntil = nil }
         guard enabled || hasFrames || verifyUntil != nil else { timer = nil; return }
         guard hasFrames || verifyUntil != nil || now >= nextDesktopCheck else { return }

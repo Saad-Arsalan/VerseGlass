@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.10
+
+- Touch ID lyrics now use the style, lettering and colors selected in the Mac app. Constellation traces the sung words, and Native Design highlights the current word inside alternating message bubbles.
+- The lock-screen wallpaper follows the current word at a limited refresh rate. Short words can pass between pictures during fast verses.
+
 ## v2.9
 
 - Added opt-in Touch ID lyrics on Mac. During playback, the current lyric line appears on the lock-screen wallpaper. macOS keeps its own clock and sign-in controls.

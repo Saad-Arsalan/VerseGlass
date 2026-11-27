@@ -42,6 +42,7 @@ private struct LyricArtboard: View {
 
     private var words: [String] { line.split(whereSeparator: \.isWhitespace).map(String.init) }
     private var active: Int { min(words.count - 1, max(-1, frame.wordIndex)) }
+    private var songLineNumber: Int { frame.firstLineNumber + frame.lineIndex }
 
     var body: some View {
         Group {
@@ -106,7 +107,7 @@ private struct LyricArtboard: View {
             }
         }
         .frame(width: points(550), height: points(285))
-        .id(frame.lineIndex)
+        .id(songLineNumber)
         .rotation3DEffect(.degrees(wall ? (reduceMotion ? -11 : -13 + 9 * frame.progress) : 0),
                           axis: (0, 1, 0), perspective: 0.65)
         .rotationEffect(.degrees(wall ? -3 : 0))
@@ -191,7 +192,7 @@ private struct LyricArtboard: View {
             }
             .font(.system(size: points(13), weight: .semibold, design: .monospaced))
             HStack(alignment: .top, spacing: points(14)) {
-                Text(String(format: "%02d", frame.lineIndex + 1))
+                Text(String(format: "%02d", songLineNumber + 1))
                     .font(.system(size: points(18), weight: .medium, design: .monospaced))
                     .foregroundStyle(secondary)
                 VStack(alignment: .leading, spacing: points(8)) {
@@ -310,7 +311,7 @@ private struct LyricArtboard: View {
     private var messages: some View {
         VStack(spacing: points(9)) {
             ForEach(visibleLines, id: \.self) { index in
-                let outgoing = index.isMultiple(of: 2)
+                let outgoing = (frame.firstLineNumber + index).isMultiple(of: 2)
                 nativeLine(index)
                     .font(type(index == frame.lineIndex ? 23 : 19, .medium))
                     .lineLimit(3)
@@ -324,7 +325,7 @@ private struct LyricArtboard: View {
             }
         }
         .shadow(color: .black.opacity(0.18), radius: points(5), y: points(4))
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: frame.lineIndex)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: songLineNumber)
     }
 
     private var payments: some View {
@@ -368,7 +369,7 @@ private struct LyricArtboard: View {
     private var mapCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                CityMap(lineIndex: frame.lineIndex, progress: frame.progress, scale: layoutScale)
+                CityMap(lineIndex: songLineNumber, progress: frame.progress, scale: layoutScale)
                 Image(systemName: "mappin.circle.fill")
                     .font(.system(size: points(38), weight: .bold))
                     .symbolRenderingMode(.palette)
@@ -432,7 +433,7 @@ private struct LyricArtboard: View {
                 .shadow(color: .black.opacity(0.2), radius: points(4), y: points(2))
             }
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: frame.lineIndex)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: songLineNumber)
     }
 }
 
