@@ -22,6 +22,12 @@ Choose **Open Listening View** from the VerseGlass menu bar to see the current r
 2. In System Settings, select **Verseglass** as your screen saver. On macOS 27, open **Wallpaper → Screen Saver → Custom**. Find Verseglass under **Other**.
 3. Keep VerseGlass running and start a song. From the unlocked desktop, choose **Start Lyric Screen Saver** in the VerseGlass menu bar. Allow System Events automation if prompted.
 
+### Touch ID lyrics
+
+Open **Lock Screen → Touch ID lyrics** and choose a picture or the solid-black option. This sets the desktop picture on your MacBook’s built-in display, or the main display on a desktop Mac. Keep **Show lyrics** on and play a song with synced lyrics. Briefly press and release Touch ID. While the display is awake, VerseGlass draws the current line on the wallpaper with room for the macOS clock and sign-in controls. Keyboard monitoring and Accessibility permissions can stay off.
+
+Unlocking returns you to your chosen picture. Turning the feature off leaves that picture in place. Applying a picture to one display can turn off **Show on all Spaces**. To restore your previous wallpaper and Spaces setting, open System Settings → Wallpaper. macOS may keep lyric images in Wallpaper history. The Touch ID wallpaper updates by line. The screen saver below animates individual words.
+
 ### Lock-screen shortcut
 
 Select **Verseglass** as your system screen saver. In VerseGlass → **Lock Screen**, enable **Show lyrics** and **Start lyrics first on ⌃⌘Q**. While a song plays, hold **Command** and **Control** in either order, then tap **Q** once. The shortcut starts the selected saver. With macOS set to require a password immediately, the saver can lock the session while the words animate.

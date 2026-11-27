@@ -31,6 +31,8 @@ private struct Backdrop: View {
     @Published var browsing: Style
     @Published var panel: String?
     @Published var screens = NSScreen.screens
+    @Published var showsWallpaperSettings = false
+    @Published var wallpaperSetupError: String?
     let origin = Date().addingTimeInterval(-7.0)
     init(style: Style) { browsing = style }
 }
@@ -39,12 +41,14 @@ struct Studio: View {
     @ObservedObject var prefs: Preferences
     @ObservedObject var engine: Engine
     @ObservedObject var lockLyrics: LockLyrics
+    @ObservedObject var lyricWallpaper: LyricWallpaper
     @StateObject private var browser: BrowserState
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    init(prefs: Preferences, engine: Engine, lockLyrics: LockLyrics) {
+    init(prefs: Preferences, engine: Engine, lockLyrics: LockLyrics, lyricWallpaper: LyricWallpaper) {
         self.prefs = prefs
         self.engine = engine
         self.lockLyrics = lockLyrics
+        self.lyricWallpaper = lyricWallpaper
         _browser = StateObject(wrappedValue: BrowserState(style:prefs.style))
     }
     var body: some View {
@@ -69,6 +73,9 @@ struct Studio: View {
         .frame(minWidth:720,minHeight:520)
         .onChange(of:prefs.style) { _, value in browser.browsing = value }
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.didChangeScreenParametersNotification)) { _ in browser.screens = NSScreen.screens }
+        .sheet(isPresented: $browser.showsWallpaperSettings) {
+            WallpaperSettings(wallpaper: lyricWallpaper, showLyrics: prefs.enabled, setupError: $browser.wallpaperSetupError)
+        }
     }
     private func scene(_ frame: LyricFrame, _ style: Style, _ size: CGFloat) -> some View {
         LyricScene(frame:frame, style:style, size:size, fontName:prefs.fontName, accent:prefs.effectiveAccent)
@@ -192,6 +199,17 @@ struct Studio: View {
             case "Lighting":
                 RoomLightingView()
             case "Lock Screen":
+                Button {
+                    browser.panel = nil
+                    browser.wallpaperSetupError = nil
+                    browser.showsWallpaperSettings = true
+                } label: {
+                    HStack {
+                        Text("Touch ID lyrics…")
+                        Spacer()
+                        Text(lyricWallpaper.enabled ? "On" : "Off").foregroundStyle(.secondary)
+                    }
+                }
                 Button("Choose Verseglass screen saver…") {
                     NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.Wallpaper-Settings.extension")!)
                 }
@@ -252,6 +270,71 @@ struct Studio: View {
         if open.runModal() == .OK, let url=open.url { engine.importLyrics(url) }
     }
 }
+
+private struct WallpaperSettings: View {
+    @ObservedObject var wallpaper: LyricWallpaper
+    let showLyrics: Bool
+    @Binding var setupError: String?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Touch ID lyrics").font(.title2.bold())
+            Text("While music plays, VerseGlass shows each lyric line on the Lock Screen wallpaper.")
+            Text("Your chosen picture replaces your desktop wallpaper and stays after you turn this off. The black option uses a plain image.")
+                .foregroundStyle(.secondary)
+            Text("macOS may turn off “Show on all Spaces” and keep lyric images in Wallpaper history.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            if wallpaper.enabled {
+                Label("Touch ID lyrics are on", systemImage: "checkmark.circle.fill")
+                if !showLyrics {
+                    Text("Turn on Show lyrics in Lock Screen settings to display lyrics.")
+                        .font(.callout)
+                }
+                Button("Turn off Touch ID lyrics") {
+                    setupError = nil
+                    wallpaper.disable()
+                }
+            } else {
+                HStack {
+                    Button("Use a black picture") { enable(using: nil) }
+                    Button("Choose a picture…") { choosePicture() }
+                }
+            }
+            if let message = setupError ?? (wallpaper.status.isEmpty ? nil : wallpaper.status) {
+                Text(message)
+                    .font(.callout)
+                    .accessibilityLabel("Wallpaper status, " + message)
+            }
+            HStack {
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(24)
+        .frame(width: 420)
+    }
+
+    private func choosePicture() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose a desktop picture for Touch ID lyrics"
+        panel.prompt = "Use this picture"
+        panel.allowedContentTypes = [.jpeg, .png]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        enable(using: url)
+    }
+
+    private func enable(using url: URL?) {
+        setupError = nil
+        do { try wallpaper.enable(with: url) }
+        catch { setupError = error.localizedDescription }
+    }
+}
+
 private struct PillButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.system(size:13,weight:.semibold)).foregroundStyle(.black)

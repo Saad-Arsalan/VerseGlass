@@ -47,3 +47,5 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 ## First implementation
 
 **Listening View** gives the Mac app a dedicated window for the current recording. Switch between cover art and lyrics while the player keeps its place. For this surface, the important test is whether you can switch mid-line, return after a seek, and still recognize what is playing when artwork or lyrics are unavailable.
+
+**Physical Touch ID lock.** On a MacBook running macOS 27.2.1, a listener saw a labeled wallpaper change from amber to teal after the session locked. The second picture was submitted three seconds into the lock. This established a way for VerseGlass to show the current line behind the system clock and sign-in controls. Needle’s rendering mechanism remains unconfirmed. [Apple’s desktop picture API](https://developer.apple.com/documentation/appkit/nsworkspace/setdesktopimageurl(_:for:options:))

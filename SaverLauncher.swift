@@ -39,7 +39,12 @@ import os.lock
     }
     private nonisolated static let session = OSAllocatedUnfairLock(initialState: Session())
 
-    init(engine: Engine, prefs: Preferences) {
+    var saverIsPresentingOrStarting: Bool {
+        Self.session.withLock { $0.hasShortcutStart(at: .now()) }
+            || ProcessInfo.processInfo.systemUptime - lastHostActivity <= 2
+    }
+
+    init(engine: Engine, prefs: Preferences, usesLyricWallpaper: @escaping () -> Bool = { false }) {
         prefs.$startSaverOnLock.removeDuplicates().sink { [weak self] enabled in
             guard let self else { return }
             cancelLockRequests()
@@ -72,6 +77,10 @@ import os.lock
         center.publisher(for: .init("com.apple.screenIsLocked")).receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self, !handlingLock, prefs.startSaverOnLock, prefs.enabled, engine.playing else { return }
+                // The shortcut already requested a saver. A direct lock can use the
+                // selected lyric wallpaper without asking macOS to start another host.
+                let shortcutStarted = Self.session.withLock { $0.hasShortcutStart(at: .now()) }
+                guard shortcutStarted || !usesLyricWallpaper() else { return }
                 handlingLock = true
                 let lockedAt = ContinuousClock.now
                 startTask = Task {

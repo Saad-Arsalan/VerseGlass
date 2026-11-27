@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.9
+
+- Added opt-in Touch ID lyrics on Mac. During playback, the current lyric line appears on the lock-screen wallpaper. macOS keeps its own clock and sign-in controls.
+- Choose a static desktop picture or a plain black background in **Lock Screen → Touch ID lyrics**. VerseGlass restores that picture when you unlock. Control–Command–Q still starts the animated saver when its shortcut is enabled.
+
 ## v2.8
 
 - Avoided redundant saver launches during lock-screen startup. VerseGlass sends the first lyric frame as soon as the saver connects.

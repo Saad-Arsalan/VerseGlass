@@ -18,6 +18,7 @@ import Combine
     private let prefs = Preferences()
     private let engine = Engine()
     private let lockLyrics = LockLyrics()
+    private let lyricWallpaper = LyricWallpaper()
     private let rims = RimPanels()
     private var feed: SaverFeed?
     private var audioState: AnyCancellable?
@@ -52,7 +53,7 @@ import Combine
         window.backgroundColor = .black
         window.appearance = NSAppearance(named:.darkAqua)
         window.isReleasedWhenClosed=false
-        window.contentView=NSHostingView(rootView:Studio(prefs:prefs,engine:engine,lockLyrics:lockLyrics).ignoresSafeArea())
+        window.contentView=NSHostingView(rootView:Studio(prefs:prefs,engine:engine,lockLyrics:lockLyrics,lyricWallpaper:lyricWallpaper).ignoresSafeArea())
         window.delegate=self
         window.center()
         window.setFrameAutosaveName("VerseglassStudio")
@@ -62,7 +63,11 @@ import Combine
                 self?.loadArtwork((online || url?.isFileURL == true) ? url : nil)
             }
         openWindow()
-        saverLauncher = SaverLauncher(engine:engine,prefs:prefs)
+        let launcher = SaverLauncher(engine: engine, prefs: prefs) { [weak self] in
+            self?.lyricWallpaper.canHandleLock == true
+        }
+        saverLauncher = launcher
+        lyricWallpaper.start(engine: engine, prefs: prefs) { launcher.saverIsPresentingOrStarting }
         lockShortcut.availabilityChanged = { [weak self] registered in
             self?.prefs.shortcutAvailable = registered
         }
@@ -122,7 +127,12 @@ import Combine
             } catch { }
         }
     }
-    func applicationWillTerminate(_ notification: Notification) { overlay?.stop(); rims.stop(); RoomLighting.shared.stop() }
+    func applicationWillTerminate(_ notification: Notification) {
+        lyricWallpaper.stop()
+        overlay?.stop()
+        rims.stop()
+        RoomLighting.shared.stop()
+    }
     private func appMenu() {
         let menu=NSMenu()
         let root=menu.addItem(withTitle:"Verseglass",action:nil,keyEquivalent:"")

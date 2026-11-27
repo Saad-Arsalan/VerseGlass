@@ -16,7 +16,7 @@ Word-synced lyrics for Mac and iPad in 13 styles. On Mac, follow Spotify or Appl
 2. Play a song in the Spotify or Music desktop app. Allow playback access when macOS asks.
 3. In VerseGlass, open **Lock Screen** and turn on **Show lyrics while unlocked** to see the words on your desktop.
 
-For lyrics on **Control–Command–Q**, select the Verseglass screen saver and enable **Start lyrics first on ⌃⌘Q**. [Lock-screen setup](docs/usage.md#lock-screen-shortcut)
+For lyrics when you press **Touch ID**, open **Lock Screen → Touch ID lyrics** and choose a desktop picture. For word-by-word animation on **Control–Command–Q**, select the Verseglass screen saver and enable **Start lyrics first on ⌃⌘Q**. [Lock-screen setup](docs/usage.md#touch-id-lyrics)
 
 [Mac setup and troubleshooting](docs/usage.md) · [iPad setup and playback](docs/ipad.md) · [Report an issue](https://github.com/Saad-Arsalan/VerseGlass/issues/new/choose)
 
