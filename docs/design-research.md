@@ -42,6 +42,10 @@ The official Mac disk image contained version 1.3.1. Its signature verified and 
 
 **Control–Command–Q trial.** Spotify reported active playback before a single lock shortcut. macOS confirmed the session locked. WindowServer continued listing Needle windows as on screen, including a display-sized window. Some of the same windows were listed before locking, so that observation alone cannot distinguish visible lyrics, artwork, and transparent content. Spotify was paused after the observation. Sleep/wake and external-display behavior remain open.
 
+**Physical Touch ID trial with Needle 1.3.1.** With VerseGlass quit and Spotify playing, the listener locked a MacBook with Touch ID. Before unlocking, they saw Needle’s small player, clicked its cover to expand the artwork, then clicked again to see moving lyrics. Across 29 samples during the confirmed lock, macOS reported the same selected desktop picture URL. The observer saw no screen saver start signal or running ScreenSaverEngine. This matches the interaction Needle shows in its [lock-screen demo](https://needlemac.com/media/lock-art.mp4).
+
+VerseGlass’s Touch ID mode submits successive pictures to macOS. Those pictures can show words and artwork. Matching Needle’s two-click interaction requires a view that can receive clicks while the Mac stays locked. The API Needle uses for that view is still unknown.
+
 **Lock-screen permissions.** Needle's release notes describe the cover and word-synced lyrics, and its privacy page associates keyboard monitoring with typing sounds. Neither page identifies how Needle draws on the lock screen. On the test Mac, Device Control and Data Access was off for both apps. A separate product, NepTunes, documents a private window-server API for its lock player. VerseGlass uses the system-selected lyric saver and a single registered shortcut. [Needle release notes](https://needlemac.com/changelog.html) · [Needle privacy](https://needlemac.com/privacy.html) · [NepTunes lock-screen player](https://neptunesmac.app/lock-screen/)
 
 ## First implementation

@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.12
+
+- Documented a physical Touch ID comparison with Needle. Two cover clicks led from its small player to artwork and moving lyrics while the Mac stayed locked. This release updates the design notes only.
+
 ## v2.11
 
 - Fixed a Touch ID lock that could show the same lyric repeatedly. Each update gives macOS a fresh picture and time to display it before the next sung word is sampled.
