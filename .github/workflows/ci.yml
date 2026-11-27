@@ -44,7 +44,7 @@ jobs:
       - name: Test Touch ID lyric wallpaper and desktop restoration
         run: |
           cp Resources/ConstellationInk.jpg "$RUNNER_TEMP/"
-          swiftc -swift-version 5 LyricModels.swift Models.swift Styles.swift ConstellationScene.swift \
+          swiftc -swift-version 5 LyricModels.swift LyricTiming.swift Models.swift Styles.swift ConstellationScene.swift \
             ConstellationBackdrop.swift WallpaperScene.swift LyricWallpaper.swift Tests/LockWallpaperTests.swift \
             -o "$RUNNER_TEMP/lyric-wallpaper"
           "$RUNNER_TEMP/lyric-wallpaper"

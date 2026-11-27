@@ -9,7 +9,7 @@ struct WallpaperStyleFrame: Equatable {
     let firstLineNumber: Int
     let lineIndex: Int
     private let firstWordNumber: Int
-    private(set) var wordIndex: Int
+    let wordIndex: Int
     let style: Style
     let fontName: String
     let textSize: Double
@@ -48,15 +48,6 @@ struct WallpaperStyleFrame: Equatable {
         self.primary = primary
         self.secondary = secondary
         self.accent = accent
-    }
-
-    func canFollow(_ earlier: Self) -> Bool {
-        // A couple of sung words may land during encoding. A seek farther
-        // ahead should replace the pending image with the new lyric position.
-        guard (0...2).contains(wordIndex - earlier.wordIndex) else { return false }
-        var matchedWord = self
-        matchedWord.wordIndex = earlier.wordIndex
-        return matchedWord == earlier
     }
 
     /// The destination uses Quartz's lower-left origin. Keep the complete lyric

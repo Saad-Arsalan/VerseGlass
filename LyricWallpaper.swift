@@ -16,7 +16,16 @@ struct WallpaperFiles {
     private func inDirectory(_ url: URL?) -> Bool {
         guard let url, url.isFileURL, url.host.map({ $0.isEmpty || $0 == "localhost" }) ?? true,
               !url.pathComponents.contains("..") else { return false }
-        return url.standardizedFileURL.deletingLastPathComponent().path == directory.standardizedFileURL.path
+        let parent = url.standardizedFileURL.deletingLastPathComponent()
+        let expected = directory.standardizedFileURL
+        if parent.path == expected.path { return true }
+        // APFS may enumerate an existing folder using its original capitalization.
+        // Confirm both spellings name the same directory, including on case-sensitive volumes.
+        guard parent.path.caseInsensitiveCompare(expected.path) == .orderedSame,
+              let parentID = try? parent.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier as? NSObject,
+              let expectedID = try? expected.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier as? NSObject
+        else { return false }
+        return parentID.isEqual(expectedID)
     }
 
     func isFrame(_ url: URL?) -> Bool {
@@ -33,9 +42,13 @@ struct WallpaperFiles {
         return values?.isSymbolicLink != true && values?.isRegularFile != false
     }
 
-    func owns(_ url: URL?, pictureSlot: Int) -> Bool {
+    func isPicture(_ url: URL?, slot: Int) -> Bool {
         guard let url, inDirectory(url) else { return false }
-        return url.standardizedFileURL == picture(pictureSlot).standardizedFileURL || isFrame(url)
+        return url.lastPathComponent == picture(slot).lastPathComponent
+    }
+
+    func owns(_ url: URL?, pictureSlot: Int) -> Bool {
+        isPicture(url, slot: pictureSlot) || isFrame(url)
     }
 
     private func generatedFrames() throws -> [URL] {
@@ -67,7 +80,8 @@ struct WallpaperFiles {
         // The wallpaper service caches image layers by URL. Give each submission
         // a new path, retaining several predecessors so in-flight loads can finish.
         let existing = try generatedFrames()
-        let unselected = existing.filter { $0.standardizedFileURL != current?.standardizedFileURL }
+        let selectedName = isFrame(current) ? current?.lastPathComponent : nil
+        let unselected = existing.filter { $0.lastPathComponent != selectedName }
         let pinnedCount = existing.count - unselected.count
         for old in unselected.dropFirst(Self.retainedFrameCount - 1 - pinnedCount) {
             try unlinkFrame(old)
@@ -91,9 +105,10 @@ struct WallpaperFiles {
         let manager = FileManager.default
         let generated = try generatedFrames()
         let newest = generated.first
+        let selectedName = isFrame(current) ? current?.lastPathComponent : nil
         let legacy = (0...1).map { frame($0) }.filter { manager.fileExists(atPath: $0.path) && isFrame($0) }
         for url in generated + legacy {
-            if url == newest || url.standardizedFileURL == current?.standardizedFileURL || legacy.contains(url) {
+            if url == newest || url.lastPathComponent == selectedName || legacy.contains(url) {
                 // Preserve a neutral picture for a late system load or a legacy Space.
                 // Replacing the directory entry leaves the baseline's bytes untouched.
                 let temp = directory.appendingPathComponent(".restore-\(UUID().uuidString)")
@@ -111,10 +126,8 @@ struct WallpaperSubmission {
     // A completed render must still match the lock generation and the latest line.
     private(set) var generation = 0
     mutating func invalidate() { generation &+= 1 }
-    func isCurrent<T: Equatable>(_ token: Int, requested: T, live: T?,
-                                 compatible: (T, T) -> Bool = (==)) -> Bool {
-        guard token == generation, let live else { return false }
-        return compatible(requested, live)
+    func isCurrent<T: Equatable>(_ token: Int, requested: T, live: T?) -> Bool {
+        token == generation && requested == live
     }
 }
 
@@ -232,10 +245,6 @@ actor WallpaperRenderer {
         let content: WallpaperStyleFrame
         let size: CGSize
         let scale: CGFloat
-
-        func canFollow(_ earlier: Scene) -> Bool {
-            size == earlier.size && scale == earlier.scale && content.canFollow(earlier.content)
-        }
     }
 
     private let files: WallpaperFiles
@@ -248,6 +257,7 @@ actor WallpaperRenderer {
     private var subscriptions = Set<AnyCancellable>()
     private var timer: AnyCancellable?
     private var playback: AnyCancellable?
+    private var activeDelay: TimeInterval = 0
     private var job: Task<Void, Never>?
     private var submission = WallpaperSubmission()
     private var activity: NSObjectProtocol?
@@ -359,6 +369,7 @@ actor WallpaperRenderer {
         catch { status = "Couldn’t save the wallpaper setting. Try turning it off again."; return }
         configuration = saved
         enabled = false
+        activeDelay = 0
         status = ""
         restore()
         monitor()
@@ -368,6 +379,7 @@ actor WallpaperRenderer {
         subscriptions.removeAll()
         timer = nil
         playback = nil
+        activeDelay = 0
         restore()
     }
 
@@ -384,8 +396,13 @@ actor WallpaperRenderer {
 
     private func monitor() {
         if enabled, let engine, let prefs, playback == nil {
-            // Progress ticks animate the saver. Wallpaper needs only discrete word or style changes.
-            let words = engine.$frame.removeDuplicates { lhs, rhs in
+            // Sample through instrumental gaps too. A delayed word can start or
+            // finish while the unshifted view stays idle.
+            let frames = engine.timingTick.map { [weak self] () -> LyricFrame in
+                guard let self, let engine = self.engine else { return .empty }
+                return activeDelay == 0 ? engine.frame : engine.playbackFrame(delay: activeDelay)
+            }
+            let words = frames.removeDuplicates { (lhs: LyricFrame, rhs: LyricFrame) -> Bool in
                 lhs.wordIndex == rhs.wordIndex && lhs.lineIndex == rhs.lineIndex &&
                     lhs.title == rhs.title && lhs.artist == rhs.artist && lhs.lines == rhs.lines &&
                     lhs.firstLineNumber == rhs.firstLineNumber
@@ -408,8 +425,13 @@ actor WallpaperRenderer {
 
     private func currentScene() -> Scene? {
         guard SaverLauncher.isLocked, enabled, !saverActive(), let screen, allowed(screen),
-              let id = displayID(screen), CGDisplayIsAsleep(id) == 0, let engine, engine.playing, let prefs,
-              let content = WallpaperStyleFrame(frame: engine.frame, style: prefs.style, fontName: prefs.fontName,
+              let id = displayID(screen), CGDisplayIsAsleep(id) == 0, let engine, engine.playing, let prefs else {
+            activeDelay = 0
+            return nil
+        }
+        activeDelay = prefs.touchIDLyricDelay
+        let frame = activeDelay == 0 ? engine.frame : engine.playbackFrame(delay: activeDelay)
+        guard let content = WallpaperStyleFrame(frame: frame, style: prefs.style, fontName: prefs.fontName,
                   textSize: prefs.textSize, primary: prefs.primaryHex, secondary: prefs.secondaryHex,
                   accent: prefs.effectiveAccent.rgbHex) else { return nil }
         let display = CGSize(width: screen.frame.width * screen.backingScaleFactor,
@@ -424,6 +446,7 @@ actor WallpaperRenderer {
         guard let configuration, let screen else { return }
         let current = NSWorkspace.shared.desktopImageURL(for: screen)
         guard files.owns(current, pictureSlot: configuration.pictureSlot) else {
+            activeDelay = 0
             restore()
             status = "Turn off Touch ID lyrics, then choose a picture again to use this desktop."
             return
@@ -456,7 +479,7 @@ actor WallpaperRenderer {
                 let live = currentScene()
                 catchUp = live != requested
                 guard !Task.isCancelled,
-                      submission.isCurrent(token, requested: requested, live: live, compatible: { $1.canFollow($0) }),
+                      submission.isCurrent(token, requested: requested, live: live),
                       let target = self.screen, uuid(target) == configuration.displayUUID else { return }
                 let active = NSWorkspace.shared.desktopImageURL(for: target)
                 guard let url = try files.writeFrame(data, after: active, pictureSlot: configuration.pictureSlot)
@@ -467,7 +490,7 @@ actor WallpaperRenderer {
                 lastFrame = requested
                 // Give the system time to finish loading and transitioning to this
                 // picture before sampling the next sung word.
-                nextAttempt = .now + .seconds(max(1.35, Double(data.count) / 900_000))
+                nextAttempt = .now + .seconds(max(0.50, Double(data.count) / 900_000))
                 status = ""
                 log.info("Submitted a new lock-screen lyric picture")
             } catch {
@@ -508,7 +531,7 @@ actor WallpaperRenderer {
                 nextRestoreAttempt = now + .seconds(1)
                 // The getter can still report our baseline immediately after a frame
                 // submission. Queue the baseline again if the lock just ended.
-                if firstRestore && current.standardizedFileURL == files.picture(configuration.pictureSlot).standardizedFileURL {
+                if firstRestore && files.isPicture(current, slot: configuration.pictureSlot) {
                     try apply(files.picture(configuration.pictureSlot), on: target)
                 }
                 restored = try files.restorePicture(configuration.pictureSlot, current: {

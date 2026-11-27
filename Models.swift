@@ -22,6 +22,9 @@ extension Color {
     var artworkThumbnail: Data?
     var effectiveAccent: Color { (matchArtwork ? artworkAccent : nil) ?? Color(hex:colorHex) }
     @Published var startSaverOnLock = d.bool(forKey:"startSaverOnLock") { didSet { Self.d.set(startSaverOnLock, forKey:"startSaverOnLock") } }
+    @Published var touchIDLyricDelay = min(3.0, max(-3.0, d.double(forKey: "touchIDLyricDelay"))) {
+        didSet { Self.d.set(touchIDLyricDelay, forKey: "touchIDLyricDelay") }
+    }
     @Published var saverFirstShortcut = d.bool(forKey: "saverFirstShortcut") {
         didSet { Self.d.set(saverFirstShortcut, forKey: "saverFirstShortcut") }
     }

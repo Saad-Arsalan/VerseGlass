@@ -4,6 +4,7 @@ import Combine
 @MainActor
 final class Engine: ObservableObject {
     @Published private(set) var frame: LyricFrame = .empty
+    let timingTick = PassthroughSubject<Void, Never>()
     @Published private(set) var status = "Play a song in Spotify or Apple Music."
     @Published private(set) var spotifyStatus = "Not running"
     @Published private(set) var musicStatus = "Not running"
@@ -145,15 +146,22 @@ final class Engine: ObservableObject {
         } catch { status = "Lyric file error · " + error.localizedDescription }
     }
 
-    private func render() {
-        guard let track = current.track else { return }
+    func playbackFrame(delay: TimeInterval) -> LyricFrame {
+        guard let track = current.track else { return .empty }
         let drift = current.playing ? max(0, ProcessInfo.processInfo.systemUptime - current.sampled) : 0
         let position = current.position + drift + timingOffset
-        let next = lyrics?.frame(at: position, duration: track.duration, title: track.title, artist: track.artist)
+        return lyrics?.frame(at: position, duration: track.duration, title: track.title, artist: track.artist, delay: delay)
             ?? LyricFrame(title: track.title, artist: track.artist, lines: [], lineIndex: 0, wordIndex: 0, progress: 0)
+    }
+
+    private func render() {
+        let next = playbackFrame(delay: 0)
         if frame.title != next.title || frame.artist != next.artist || frame.lineIndex != next.lineIndex
             || frame.wordIndex != next.wordIndex || frame.progress != next.progress || frame.lines != next.lines {
             frame = next
         }
+        // An offset display can cross a word boundary while the unshifted
+        // display is in a gap. Let it sample the same clock after publication.
+        timingTick.send()
     }
 }

@@ -92,7 +92,9 @@ struct TimedLyrics {
         texts = unique.map { $0.words.joined(separator: " ") }
     }
 
-    func frame(at position: Double, duration: Double, title: String, artist: String) -> LyricFrame {
+    func frame(at playbackPosition: Double, duration: Double, title: String, artist: String,
+               delay: TimeInterval = 0) -> LyricFrame {
+        let position = playbackPosition - delay
         let idle = LyricFrame(title: title, artist: artist, lines: [], lineIndex: 0, wordIndex: 0, progress: 0)
         guard let index = latest(cues, at: position, time: { $0.start }) else { return idle }
         let cue = cues[index]

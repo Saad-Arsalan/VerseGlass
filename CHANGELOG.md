@@ -4,6 +4,7 @@
 
 - Fixed a Touch ID lock that could show the same lyric repeatedly. Each update gives macOS a fresh picture and time to display it before the next sung word is sampled.
 - VerseGlass limits the lyric pictures it keeps locally and restores the chosen desktop on unlock, including after updating from v2.9 or v2.10.
+- Adjust Touch ID lyrics earlier or later in quarter-second steps. This setting applies only to the wallpaper. Songs with line timestamps still use estimated word timing.
 
 ## v2.10
 

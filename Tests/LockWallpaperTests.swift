@@ -3,9 +3,11 @@ import Combine
 import ImageIO
 
 // Exercise ownership, recovery and the real renderer without changing a desktop.
-final class Engine {
+@MainActor final class Engine {
+    let timingTick = PassthroughSubject<Void, Never>()
     @Published var frame = LyricFrame.empty
     @Published var playing = false
+    func playbackFrame(delay: TimeInterval) -> LyricFrame { frame }
 }
 enum SaverLauncher { static let isLocked = false }
 
@@ -59,6 +61,7 @@ enum SaverLauncher { static let isLocked = false }
         let intact = try Data(contentsOf: baseline)
         precondition(intact == black, "Reusing the frame must preserve the baseline")
         try checkNewFrames(in: root, baseline: baseline, black: black, legacy: legacy)
+        try checkDirectoryCasing(in: root, black: black)
         let imported = try WallpaperRenderer.baseline(from: baseline)
         precondition(!imported.isEmpty)
         do {
@@ -66,6 +69,7 @@ enum SaverLauncher { static let isLocked = false }
             preconditionFailure("Unreadable pictures must fail before setup changes any desktop")
         } catch { }
 
+        checkLyricDelay()
         try await checkStyles(over: baseline)
         let scaled = WallpaperRenderer.size(for: CGSize(width: 7680, height: 4320))
         precondition(scaled.width == 3456 && scaled.height == 1944)
@@ -152,6 +156,71 @@ enum SaverLauncher { static let isLocked = false }
         print("Passed immutable submissions, bounded retention, and recovery after restart")
     }
 
+    private static func checkDirectoryCasing(in root: URL, black: Data) throws {
+        let manager = FileManager.default
+        let stored = root.appendingPathComponent("Verseglass/Lock Wallpaper", isDirectory: true)
+        let configured = root.appendingPathComponent("VerseGlass/Lock Wallpaper", isDirectory: true)
+        try manager.createDirectory(at: stored, withIntermediateDirectories: true)
+        let files = WallpaperFiles(directory: configured)
+        let storedBaseline = stored.appendingPathComponent("Picture-0.jpg")
+        try black.write(to: storedBaseline)
+        // On a case-sensitive volume these are genuinely separate directories.
+        guard manager.fileExists(atPath: configured.path) else {
+            try manager.createDirectory(at: configured, withIntermediateDirectories: true)
+            precondition(!files.owns(storedBaseline, pictureSlot: 0))
+            return
+        }
+
+        precondition(files.owns(storedBaseline, pictureSlot: 0), "macOS may return the on-disk spelling of the desktop URL")
+        var pinned: URL?
+        for i in 0..<13 {
+            guard let submitted = try files.writeFrame(Data("word-\(i)".utf8), after: pinned ?? storedBaseline,
+                                                       pictureSlot: 0) else { preconditionFailure("Lost the selected desktop") }
+            if pinned == nil { pinned = stored.appendingPathComponent(submitted.lastPathComponent) }
+            let names = try manager.contentsOfDirectory(atPath: stored.path).filter { $0.hasPrefix("Frame-") }
+            precondition(names.count <= WallpaperFiles.retainedFrameCount, "Mixed directory casing bypassed pruning")
+            precondition(names.contains(pinned!.lastPathComponent), "Keep the system-selected frame under either spelling")
+        }
+        guard let pinned else { preconditionFailure("Missing pinned frame") }
+        let found = try files.containsFrames()
+        precondition(found)
+        try files.clearLyrics(using: 0, keeping: pinned)
+        let retained = try manager.contentsOfDirectory(at: configured, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasPrefix("Frame-") }
+        precondition(retained.contains(where: { $0.lastPathComponent == pinned.lastPathComponent }))
+        for url in retained {
+            let bytes = try Data(contentsOf: url)
+            precondition(bytes == black, "Mixed directory casing bypassed lyric cleanup")
+        }
+        print("Passed bounded storage and neutral recovery on a case-insensitive volume")
+    }
+
+    private static func checkLyricDelay() {
+        let lyrics = TimedLyrics("""
+        [00:01.00]<00:01.00>Light <00:01.50>fades
+        [00:02.00]<00:02.00>Stars <00:02.50>rise <00:03.00>
+        """)!
+        func activeWord(_ position: Double, delay: Double) -> String? {
+            let frame = lyrics.frame(at: position, duration: 4, title: "Blue Hour", artist: "VerseGlass", delay: delay)
+            guard frame.lines.indices.contains(frame.lineIndex) else { return nil }
+            let words = frame.lines[frame.lineIndex].split(separator: " ")
+            return words.indices.contains(frame.wordIndex) ? String(words[frame.wordIndex]) : nil
+        }
+        for delay in [-0.25, 0, 0.25] {
+            precondition(activeWord(1.00 + delay - 0.001, delay: delay) == nil)
+            precondition(activeWord(1.00 + delay, delay: delay) == "Light")
+            precondition(activeWord(1.50 + delay - 0.001, delay: delay) == "Light")
+            precondition(activeWord(1.50 + delay, delay: delay) == "fades")
+            precondition(activeWord(2.00 + delay - 0.001, delay: delay) == "fades")
+            precondition(activeWord(2.00 + delay, delay: delay) == "Stars")
+            precondition(activeWord(2.50 + delay, delay: delay) == "rise")
+            precondition(activeWord(3.00 + delay, delay: delay) == nil)
+        }
+        let normal = lyrics.frame(at: 2.0, duration: 4, title: "Blue Hour", artist: "VerseGlass")
+        precondition(normal.lineIndex == 1 && normal.wordIndex == 0, "Existing surfaces keep their original timing")
+        print("Passed earlier and later Touch ID timing at song, word, and line boundaries")
+    }
+
     private static func snapshot(_ frame: LyricFrame, style: Style = .constellation,
                                  accent: String = "94DDFF") -> WallpaperStyleFrame? {
         WallpaperStyleFrame(frame: frame, style: style, fontName: "SF Pro", textSize: 40,
@@ -169,16 +238,19 @@ enum SaverLauncher { static let isLocked = false }
         precondition(snapshot(lyric) == early, "Playback ticks within one word should reuse its picture")
         lyric.wordIndex = 3
         let later = snapshot(lyric)!
-        precondition(early != later && later.canFollow(early) && !early.canFollow(later))
+        let submission = WallpaperSubmission()
+        let token = submission.generation
+        precondition(!submission.isCurrent(token, requested: early, live: later))
+        precondition(!submission.isCurrent(token, requested: later, live: early))
         var jump = lyric
         jump.wordIndex = 4
-        precondition(!snapshot(jump)!.canFollow(early), "Drop a render when playback jumps several words")
+        precondition(!submission.isCurrent(token, requested: early, live: snapshot(jump)), "Drop a render when playback jumps several words")
         var seek = lyric
         seek.lineIndex = 2
-        precondition(!snapshot(seek)!.canFollow(early))
+        precondition(!submission.isCurrent(token, requested: early, live: snapshot(seek)))
         seek = lyric
         seek.title = "Second recording"
-        precondition(!snapshot(seek)!.canFollow(early))
+        precondition(!submission.isCurrent(token, requested: early, live: snapshot(seek)))
         precondition(snapshot(.empty) == nil)
 
         func render(_ frame: WallpaperStyleFrame) async throws -> [UInt8] {

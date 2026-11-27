@@ -26,6 +26,8 @@ Choose **Open Listening View** from the VerseGlass menu bar to see the current r
 
 Open **Lock Screen → Touch ID lyrics** and choose a picture or the solid-black option. This sets the desktop picture on your MacBook’s built-in display, or the main display on a desktop Mac. Keep **Show lyrics** on, select a style in the VerseGlass gallery, and play a song with synced lyrics. Briefly press and release Touch ID. VerseGlass follows the song in the style, font, and colors you chose. In **Constellation**, the sung word takes the halo and the earlier words trace a path across the wallpaper. The macOS clock and sign-in controls stay visible. Keyboard monitoring and Accessibility permissions can stay off.
 
+If the highlight appears before the singer reaches a word, open **Lock Screen → Touch ID lyrics → Lyric timing** and choose **Later**. Each click shifts the wallpaper by a quarter of a second. Choose **Earlier** if the singer reaches the word first. **Reset** restores the original timing. Songs with line timestamps have estimated word timings, so the fit can vary within a line.
+
 The wallpaper redraws in steps as words change. Fast verses can advance several words between pictures. The screen saver below provides smoother transitions. Unlocking returns you to your chosen picture. Turning the feature off leaves that picture in place. Applying a picture to one display can turn off **Show on all Spaces**. To restore your previous wallpaper and Spaces setting, open System Settings → Wallpaper. macOS may keep lyric images in Wallpaper history.
 
 ### Lock-screen shortcut

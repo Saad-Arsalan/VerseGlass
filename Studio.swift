@@ -74,7 +74,8 @@ struct Studio: View {
         .onChange(of:prefs.style) { _, value in browser.browsing = value }
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.didChangeScreenParametersNotification)) { _ in browser.screens = NSScreen.screens }
         .sheet(isPresented: $browser.showsWallpaperSettings) {
-            WallpaperSettings(wallpaper: lyricWallpaper, showLyrics: prefs.enabled, setupError: $browser.wallpaperSetupError)
+            WallpaperSettings(wallpaper: lyricWallpaper, showLyrics: prefs.enabled,
+                              lyricDelay: $prefs.touchIDLyricDelay, setupError: $browser.wallpaperSetupError)
         }
     }
     private func scene(_ frame: LyricFrame, _ style: Style, _ size: CGFloat) -> some View {
@@ -274,6 +275,7 @@ struct Studio: View {
 private struct WallpaperSettings: View {
     @ObservedObject var wallpaper: LyricWallpaper
     let showLyrics: Bool
+    @Binding var lyricDelay: Double
     @Binding var setupError: String?
     @Environment(\.dismiss) private var dismiss
 
@@ -291,6 +293,25 @@ private struct WallpaperSettings: View {
                 if !showLyrics {
                     Text("Turn on Show lyrics in Lock Screen settings to display lyrics.")
                         .font(.callout)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Lyric timing")
+                        Spacer()
+                        Text(timingLabel).monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Button("Earlier") { lyricDelay = max(-3, lyricDelay - 0.25) }
+                            .disabled(lyricDelay <= -3)
+                            .accessibilityLabel("Show lyrics a quarter second earlier")
+                        Button("Later") { lyricDelay = min(3, lyricDelay + 0.25) }
+                            .disabled(lyricDelay >= 3)
+                            .accessibilityLabel("Show lyrics a quarter second later")
+                        Spacer()
+                        Button("Reset") { lyricDelay = 0 }
+                            .disabled(lyricDelay == 0)
+                            .accessibilityLabel("Reset lyric timing")
+                    }
                 }
                 Button("Turn off Touch ID lyrics") {
                     setupError = nil
@@ -315,6 +336,12 @@ private struct WallpaperSettings: View {
         .fixedSize(horizontal: false, vertical: true)
         .padding(24)
         .frame(width: 420)
+    }
+
+    private var timingLabel: String {
+        guard lyricDelay != 0 else { return "Default (0 s)" }
+        let seconds = abs(lyricDelay).formatted(.number.precision(.fractionLength(0...2)))
+        return lyricDelay > 0 ? "\(seconds) s later" : "\(seconds) s earlier"
     }
 
     private func choosePicture() {
