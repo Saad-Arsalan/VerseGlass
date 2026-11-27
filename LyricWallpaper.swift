@@ -8,39 +8,96 @@ import UniformTypeIdentifiers
 /// selected through setup or written by this app, even after a crash or Space change.
 struct WallpaperFiles {
     let directory: URL
+    static let retainedFrameCount = 4
     func picture(_ slot: Int) -> URL { directory.appendingPathComponent("Picture-\(slot).jpg") }
+    // Earlier releases installed these two names as desktop pictures.
     func frame(_ slot: Int) -> URL { directory.appendingPathComponent("Line-\(slot).jpg") }
-    func frameSlot(_ url: URL?) -> Int? {
-        (0...1).first { url?.standardizedFileURL == frame($0).standardizedFileURL }
+
+    private func inDirectory(_ url: URL?) -> Bool {
+        guard let url, url.isFileURL, url.host.map({ $0.isEmpty || $0 == "localhost" }) ?? true,
+              !url.pathComponents.contains("..") else { return false }
+        return url.standardizedFileURL.deletingLastPathComponent().path == directory.standardizedFileURL.path
     }
+
+    func isFrame(_ url: URL?) -> Bool {
+        guard let url, inDirectory(url) else { return false }
+        let name = url.lastPathComponent
+        if name != "Line-0.jpg" && name != "Line-1.jpg" {
+            guard name.hasPrefix("Frame-"), name.hasSuffix(".jpg") else { return false }
+            let id = String(name.dropFirst(6).dropLast(4))
+            guard UUID(uuidString: id)?.uuidString == id else { return false }
+        }
+        // A retired frame can be selected on an inactive Space. Recognize its
+        // name even after pruning, but never follow or remove a symlink or directory.
+        let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        return values?.isSymbolicLink != true && values?.isRegularFile != false
+    }
+
     func owns(_ url: URL?, pictureSlot: Int) -> Bool {
-        url?.standardizedFileURL == picture(pictureSlot).standardizedFileURL || frameSlot(url) != nil
+        guard let url, inDirectory(url) else { return false }
+        return url.standardizedFileURL == picture(pictureSlot).standardizedFileURL || isFrame(url)
     }
-    func nextFrame(after current: URL?, pictureSlot: Int) -> Int? {
+
+    private func generatedFrames() throws -> [URL] {
+        let keys = [URLResourceKey.contentModificationDateKey, .isRegularFileKey, .isSymbolicLinkKey]
+        let contents = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys)
+        // Only scan this app-owned directory, on submission, startup and cleanup.
+        let generated = try contents.compactMap { url -> (URL, Date)? in
+            guard url.lastPathComponent.hasPrefix("Frame-"), isFrame(url) else { return nil }
+            let modified = try url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+            return (url, modified ?? .distantPast)
+        }
+        return generated.sorted { $0.1 > $1.1 }.map(\.0)
+    }
+
+    func containsFrames() throws -> Bool {
+        if (0...1).contains(where: { FileManager.default.fileExists(atPath: frame($0).path) && isFrame(frame($0)) }) {
+            return true
+        }
+        return try !generatedFrames().isEmpty
+    }
+
+    func writeFrame(_ data: Data, after current: URL?, pictureSlot: Int) throws -> URL? {
         guard owns(current, pictureSlot: pictureSlot) else { return nil }
-        return frameSlot(current) == 0 ? 1 : 0
+        // The wallpaper service caches image layers by URL. Give each submission
+        // a new path, retaining several predecessors so in-flight loads can finish.
+        let existing = try generatedFrames()
+        let unselected = existing.filter { $0.standardizedFileURL != current?.standardizedFileURL }
+        let pinnedCount = existing.count - unselected.count
+        for old in unselected.dropFirst(Self.retainedFrameCount - 1 - pinnedCount) {
+            try FileManager.default.removeItem(at: old)
+        }
+        let url = directory.appendingPathComponent("Frame-\(UUID().uuidString).jpg")
+        try data.write(to: url, options: .atomic)
+        return url
     }
+
     func restorePicture(_ pictureSlot: Int, current: () -> URL?, apply: (URL) throws -> Void) throws -> Bool {
         guard let original = current() else { return false }
-        guard frameSlot(original) != nil else { return true }
+        guard isFrame(original) else { return true }
         try apply(picture(pictureSlot))
         // A successful request can precede the wallpaper service switching files.
         guard let after = current() else { return false }
-        return frameSlot(after) == nil
+        return !isFrame(after)
     }
-    // Another Space may still point to a slot. Give that URL neutral pixels
-    // instead of deleting a picture the public API cannot enumerate.
-    func clearLyrics(using pictureSlot: Int) throws {
+
+    func clearLyrics(using pictureSlot: Int, keeping current: URL? = nil) throws {
         let baseline = picture(pictureSlot)
         let manager = FileManager.default
-        let temp = directory.appendingPathComponent(".restoring")
-        defer { try? manager.removeItem(at: temp) }
-        for slot in 0...1 where manager.fileExists(atPath: frame(slot).path) {
-            try? manager.removeItem(at: temp)
-            // A hard link shares the baseline's storage. New lyric frames are
-            // always written by atomic replacement, leaving the baseline intact.
-            try manager.linkItem(at: baseline, to: temp)
-            guard rename(temp.path, frame(slot).path) == 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
+        let generated = try generatedFrames()
+        let newest = generated.first
+        let legacy = (0...1).map { frame($0) }.filter { manager.fileExists(atPath: $0.path) && isFrame($0) }
+        for url in generated + legacy {
+            if url == newest || url.standardizedFileURL == current?.standardizedFileURL || legacy.contains(url) {
+                // Preserve a neutral picture for a late system load or a legacy Space.
+                // Replacing the directory entry leaves the baseline's bytes untouched.
+                let temp = directory.appendingPathComponent(".restore-\(UUID().uuidString)")
+                try manager.linkItem(at: baseline, to: temp)
+                defer { try? manager.removeItem(at: temp) }
+                guard rename(temp.path, url.path) == 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
+            } else {
+                try manager.removeItem(at: url)
+            }
         }
     }
 }
@@ -190,6 +247,8 @@ actor WallpaperRenderer {
     private var submission = WallpaperSubmission()
     private var activity: NSObjectProtocol?
     private var hasFrames = false
+    private var needsFileCleanup = false
+    private var nextRestoreAttempt = ContinuousClock.now
     private var lastFrame: Scene?
     private var nextAttempt = ContinuousClock.now
     private var verifyUntil: ContinuousClock.Instant?
@@ -204,7 +263,8 @@ actor WallpaperRenderer {
            (0...1).contains(saved.pictureSlot) {
             configuration = saved
             enabled = saved.enabled
-            hasFrames = (0...1).contains { FileManager.default.fileExists(atPath: files.frame($0).path) }
+            hasFrames = (try? files.containsFrames()) ?? true
+            needsFileCleanup = hasFrames
         }
     }
 
@@ -335,8 +395,8 @@ actor WallpaperRenderer {
     }
 
     private func resyncDesktop() {
-        // An inactive Space may still reference one of the slots when it returns.
-        if let screen, files.frameSlot(NSWorkspace.shared.desktopImageURL(for: screen)) != nil { hasFrames = true }
+        // A returning Space can still refer to a retired frame by name.
+        if let screen, files.isFrame(NSWorkspace.shared.desktopImageURL(for: screen)) { hasFrames = true }
         monitor()
         refresh()
     }
@@ -363,7 +423,7 @@ actor WallpaperRenderer {
             status = "Turn off Touch ID lyrics, then choose a picture again to use this desktop."
             return
         }
-        guard job == nil, scene != lastFrame || files.frameSlot(current) == nil else { return }
+        guard job == nil, scene != lastFrame || !files.isFrame(current) else { return }
         if activity == nil {
             activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep,
                                                              reason: "Updating lyrics on the lock-screen wallpaper")
@@ -394,17 +454,17 @@ actor WallpaperRenderer {
                       submission.isCurrent(token, requested: requested, live: live, compatible: { $1.canFollow($0) }),
                       let target = self.screen, uuid(target) == configuration.displayUUID else { return }
                 let active = NSWorkspace.shared.desktopImageURL(for: target)
-                guard let slot = files.nextFrame(after: active, pictureSlot: configuration.pictureSlot) else { return }
-                let url = files.frame(slot)
-                try data.write(to: url, options: .atomic)
+                guard let url = try files.writeFrame(data, after: active, pictureSlot: configuration.pictureSlot)
+                else { return }
                 hasFrames = true
+                needsFileCleanup = true
                 try apply(url, on: target)
                 lastFrame = requested
-                // Detailed photos yield larger files. Give the wallpaper service
-                // time to consume them without queuing more writes on fast verses.
-                nextAttempt = .now + .seconds(max(0.4, Double(data.count) / 900_000))
+                // Give the system time to finish loading and transitioning to this
+                // picture before sampling the next sung word.
+                nextAttempt = .now + .seconds(max(1.35, Double(data.count) / 900_000))
                 status = ""
-                log.info("Submitted lock-screen lyric frame in slot \(slot, privacy: .public)")
+                log.info("Submitted a new lock-screen lyric picture")
             } catch {
                 guard token == submission.generation, !Task.isCancelled else { return }
                 status = "Couldn’t update the lyric wallpaper. VerseGlass will retry."
@@ -423,37 +483,47 @@ actor WallpaperRenderer {
         if firstRestore {
             renderer = WallpaperRenderer()
             nextAttempt = now
+            nextRestoreAttempt = now
             verifyUntil = now + .seconds(5)
         }
         if let until = verifyUntil, now >= until { verifyUntil = nil }
         guard enabled || hasFrames || verifyUntil != nil else { timer = nil; return }
         guard hasFrames || verifyUntil != nil || now >= nextDesktopCheck else { return }
         nextDesktopCheck = now + .seconds(8)
-        guard let configuration, let screen,
-              let current = NSWorkspace.shared.desktopImageURL(for: screen) else { return }
-        if files.frameSlot(current) != nil { hasFrames = true }
+        guard let configuration else { return }
+        let target = screen
+        let workspace = NSWorkspace.shared
+        let current = target.flatMap { workspace.desktopImageURL(for: $0) }
+        if files.isFrame(current) { hasFrames = true }
         guard hasFrames else { return }
+
+        var restored = false
         do {
-            // When an unlock races a just-submitted frame, macOS can still report
-            // the baseline. Queue it again after the frame and verify later.
-            if firstRestore && current.standardizedFileURL == files.picture(configuration.pictureSlot).standardizedFileURL {
-                try apply(files.picture(configuration.pictureSlot), on: screen)
+            if let target, let current, now >= nextRestoreAttempt {
+                nextRestoreAttempt = now + .seconds(1)
+                // The getter can still report our baseline immediately after a frame
+                // submission. Queue the baseline again if the lock just ended.
+                if firstRestore && current.standardizedFileURL == files.picture(configuration.pictureSlot).standardizedFileURL {
+                    try apply(files.picture(configuration.pictureSlot), on: target)
+                }
+                restored = try files.restorePicture(configuration.pictureSlot, current: {
+                    workspace.desktopImageURL(for: target)
+                }, apply: { picture in
+                    try self.apply(picture, on: target)
+                    log.info("Restored selected desktop picture")
+                })
             }
-            let clear = try files.restorePicture(configuration.pictureSlot, current: {
-                NSWorkspace.shared.desktopImageURL(for: screen)
-            }, apply: { picture in
-                try self.apply(picture, on: screen)
-                log.info("Restored selected desktop picture")
-            })
-            guard clear else { return }
         } catch {
             status = "Couldn’t restore your picture. VerseGlass will retry when the display is available."
-            return
         }
-        // An external wallpaper choice wins; never overwrite it on unlock.
+        // Erase lyric bytes even when the display is disconnected or macOS still
+        // reports the previous URL. Only the desktop selection itself needs a retry.
         do {
-            try files.clearLyrics(using: configuration.pictureSlot)
-            hasFrames = false
+            if needsFileCleanup {
+                try files.clearLyrics(using: configuration.pictureSlot, keeping: current)
+                needsFileCleanup = false
+            }
+            hasFrames = !restored
         } catch {
             status = "Couldn’t clear the last lyric pictures. VerseGlass will retry."
         }

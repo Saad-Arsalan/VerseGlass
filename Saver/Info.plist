@@ -7,6 +7,6 @@
 <key>CFBundleExecutable</key><string>VerseglassSaver</string>
 <key>CFBundlePackageType</key><string>BNDL</string>
 <key>NSPrincipalClass</key><string>VerseglassSaverView</string>
-<key>CFBundleShortVersionString</key><string>2.10</string>
-<key>CFBundleVersion</key><string>19</string>
+<key>CFBundleShortVersionString</key><string>2.11</string>
+<key>CFBundleVersion</key><string>20</string>
 </dict></plist>

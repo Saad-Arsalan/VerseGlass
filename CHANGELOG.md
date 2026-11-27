@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.11
+
+- Fixed a Touch ID lock that could show the same lyric repeatedly. Each update gives macOS a fresh picture and time to display it before the next sung word is sampled.
+- VerseGlass limits the lyric pictures it keeps locally and restores the chosen desktop on unlock, including after updating from v2.9 or v2.10.
+
 ## v2.10
 
 - Touch ID lyrics now use the style, lettering and colors selected in the Mac app. Constellation traces the sung words, and Native Design highlights the current word inside alternating message bubbles.
