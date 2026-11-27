@@ -57,6 +57,11 @@ struct WallpaperFiles {
         return try !generatedFrames().isEmpty
     }
 
+    private func unlinkFrame(_ url: URL) throws {
+        // Never recursively remove an entry if it changed type since enumeration.
+        if unlink(url.path) != 0 && errno != ENOENT { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
+    }
+
     func writeFrame(_ data: Data, after current: URL?, pictureSlot: Int) throws -> URL? {
         guard owns(current, pictureSlot: pictureSlot) else { return nil }
         // The wallpaper service caches image layers by URL. Give each submission
@@ -65,7 +70,7 @@ struct WallpaperFiles {
         let unselected = existing.filter { $0.standardizedFileURL != current?.standardizedFileURL }
         let pinnedCount = existing.count - unselected.count
         for old in unselected.dropFirst(Self.retainedFrameCount - 1 - pinnedCount) {
-            try FileManager.default.removeItem(at: old)
+            try unlinkFrame(old)
         }
         let url = directory.appendingPathComponent("Frame-\(UUID().uuidString).jpg")
         try data.write(to: url, options: .atomic)
@@ -93,10 +98,10 @@ struct WallpaperFiles {
                 // Replacing the directory entry leaves the baseline's bytes untouched.
                 let temp = directory.appendingPathComponent(".restore-\(UUID().uuidString)")
                 try manager.linkItem(at: baseline, to: temp)
-                defer { try? manager.removeItem(at: temp) }
+                defer { _ = unlink(temp.path) }
                 guard rename(temp.path, url.path) == 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
             } else {
-                try manager.removeItem(at: url)
+                try unlinkFrame(url)
             }
         }
     }

@@ -92,6 +92,11 @@ enum SaverLauncher { static let isLocked = false }
         let folder = root.appendingPathComponent("Frame-22222222-2222-4222-8222-222222222222.jpg", isDirectory: true)
         try manager.createDirectory(at: folder, withIntermediateDirectories: false)
 
+        let foundLegacy = try files.containsFrames()
+        precondition(foundLegacy, "Find an old lyric picture on startup")
+        for url in legacy where manager.fileExists(atPath: url.path) { try manager.removeItem(at: url) }
+        let foundUnrelated = try files.containsFrames()
+        precondition(!foundUnrelated, "External files should never trigger recovery")
         for url in [unrelated, external, traversal, baselineTraversal, link, folder] {
             precondition(!files.isFrame(url), "Unexpected wallpaper ownership for " + url.lastPathComponent)
             let ignored = try files.writeFrame(Data([0]), after: url, pictureSlot: 0)
@@ -121,6 +126,9 @@ enum SaverLauncher { static let isLocked = false }
 
         // Recover from disk alone, as when the app restarts after being killed.
         let recovered = WallpaperFiles(directory: root)
+        let foundGenerated = try recovered.containsFrames()
+        precondition(foundGenerated, "Find generated pictures after an interrupted lock")
+        for url in legacy { try Data("legacy cue".utf8).write(to: url) }
         for previous in submitted + legacy {
             var current: URL? = previous
             let restored = try recovered.restorePicture(0, current: { current }, apply: { current = $0 })
